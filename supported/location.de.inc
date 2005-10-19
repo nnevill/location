@@ -20,10 +20,11 @@ function location_map_link_de($location = array(), $hide = array()) {
   // to tinfo!.... not that I have anything personal against tinfo!.
   if ($link = _location_map_link_de_tinfo($location)) {
     $map_links['T-info'] = $link;
-}
-
+  }
+  
   return $map_links;
 }
+
 
 function _location_map_link_de_tinfo($location = array()) {
   $get_query = '?';
@@ -192,24 +193,4 @@ function location_get_postalcode_data_de($location = array()) {
 }
  
  
-function location_province_list_de() {
-  return array(
-         'BB' => 'Brandenburg',
-         'BE' => 'Berlin',
-         'BW' => 'Baden-Württemberg',
-         'BY' => 'Bayern',
-         'HB' => 'Bremen',
-         'HE' => 'Hessen',
-         'HH' => 'Hamburg',
-         'MV' => 'Mecklenburg-Vorpommern',
-         'NI' => 'Niedersachsen',
-         'NW' => 'Nordrhein-Westfalen',
-         'RP' => 'Rheinland-Pfalz',
-         'SH' => 'Schleswig-Holstein',
-         'SL' => 'Saarland',
-         'SN' => 'Sachsen',
-         'ST' => 'Sachsen-Anhalt',
-         'TH' => 'Thüringen'
-         );
-}  
 ?>
