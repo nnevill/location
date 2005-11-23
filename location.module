@@ -640,20 +640,21 @@ function location_user($op, &$edit, &$user, $category = NULL) {
     if ($user_setting == LOCATION_USER_CIVICRM_ONLY) {
       // There was no location form. We need to map CiviCRM fields to location fields.
       $edit['location'] = array();
-      $edit['location']['street'] = isset($edit['street_address']) ? $edit['street_address'] : '';
-      $edit['location']['additional'] = isset($edit['supplemental_address_1']) ? $edit['supplemental_address_1'] : '';
-      if (isset($edit['supplemental_address_2'])) {
-        $edit['location']['additional'] .= $edit['supplemental_address_2'];
+      $edit['location']['street'] = isset($_POST['street_address']) ? $_POST['street_address'] : '';
+      $edit['location']['additional'] = isset($_POST['supplemental_address_1']) ? $_POST['supplemental_address_1'] : '';
+      if (isset($_POST['supplemental_address_2'])) {
+        $edit['location']['additional'] .= $_POST['supplemental_address_2'];
       }
-      $edit['location']['city'] =  isset($edit['city']) ? $edit['city'] : '';
-      $edit['location']['postal_code'] = isset($edit['postal_code']) ? $edit['postal_code'] : '';
+      $edit['location']['city'] =  isset($_POST['city']) ? $_POST['city'] : '';
+      $edit['location']['postal_code'] = isset($_POST['postal_code']) ? $_POST['postal_code'] : '';
       db_set_active('civicrm');
-      if (isset($edit['state_province_id'])) {
-        $province_id = db_result(db_query('SELECT abbreviation FROM civicrm_state_province WHERE id = %d', $edit['state_province_id']));
+
+      if (isset($_POST['state_province'])) {
+        $province_id = db_result(db_query('SELECT abbreviation FROM civicrm_state_province WHERE id = %d', $_POST['state_province']));
         $edit['location']['province'] = strtoupper($province_id);
       }
-      if (isset($edit['country_id'])) {
-        $state_id = db_result(db_query('SELECT iso_code FROM civicrm_country WHERE id = %d', $edit['country_id']));
+      if (isset($_POST['country'])) {
+        $state_id = db_result(db_query('SELECT iso_code FROM civicrm_country WHERE id = %d', $_POST['country']));
         $edit['location']['country'] = strtolower($state_id);
       }
       db_set_active();
