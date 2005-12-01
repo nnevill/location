@@ -337,25 +337,17 @@ function location_form($fields = array(), $prefilled_values = array(), $required
   $form = $description;
   if (count($fields)) {
     if (in_array('name', $fields)) {
-       $form .= '<div class="container-inline">';
        $form .= form_textfield('Location Name', $form_name .'][name', isset($prefilled_values['name']) ? $prefilled_values['name'] : '', 64, 64, t('e.g. a place of business, venue, meeting point'), NULL, in_array('name', $required_fields));
-       $form .= "</div>\n";
     }
 
     if (in_array('street', $fields)) {
-      $form .= '<div class="container-inline">';
       $form .= form_textfield('Street', $form_name .'][street', isset($prefilled_values['street']) ? $prefilled_values['street'] : '', 64, 64, NULL, NULL, in_array('street', $required_fields));
-      $form .= "</div>\n";
-      $form .= '<div class="container-inline">';
       $form .= form_textfield('Additional', $form_name .'][additional', isset($prefilled_values['additional']) ? $prefilled_values['additional'] : '', 64, 64);
-      $form .= "</div>\n";
     }
     
 
     if (in_array('city', $fields)) {
-      $form .= '<div class="container-inline">';
       $form .= form_textfield('City', $form_name .'][city', isset($prefilled_values['city']) ? $prefilled_values['city'] : '', 64, 64, NULL, NULL, in_array('city', $required_fields));
-      $form .= "</div>\n";
     }
     
     if (in_array('province', $fields)) {
@@ -363,16 +355,12 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         $form .= form_hidden($form_name .'][province', $suppressed_values['province']);
       }
       else {
-        $form .= '<div class="container-inline">';
         $form .= _location_province_select_options(isset($prefilled_values['province']) ? $prefilled_values['province'] : '', in_array('province', $required_fields), in_array('country', array_keys($suppressed_values)) ? $suppressed_values['country'] : NULL, $form_name);
-        $form .= "</div>\n";
       }
     }
     
     if (in_array('postal_code', $fields)) {
-      $form .= '<div class="container-inline">';
       $form .= form_textfield('Postal Code', $form_name .'][postal_code', isset($prefilled_values['postal_code']) ? $prefilled_values['postal_code'] : '', 16, 16, NULL, NULL, in_array('postal_code', $required_fields));
-      $form .= "</div>\n";
     }
     
     if (in_array('country', $fields)) {
@@ -380,45 +368,27 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         $form .= form_hidden($form_name .'][country', $suppressed_values['country']);
       }
       else {
-        $form .= '<div class="container-inline">';
         $form .= _location_country_select_options(isset($prefilled_values['country']) ? $prefilled_values['country'] : '', in_array('country', $required_fields), $form_name, $function);
-        $form .= "</div>\n";
       }
     }
     
   }
   else {
-    $form .= '<div class="container-inline">';
     $form .= form_textfield('Location Name', $form_name .'][name', isset($prefilled_values['name']) ? $prefilled_values['name'] : '', 64, 64, t('e.g. a place of business, venue, meeting point'), NULL, in_array('name', $required_fields));
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= form_textfield('Street', $form_name .'][street', isset($prefilled_values['street']) ? $prefilled_values['street'] : '', 64, 64, NULL, NULL, in_array('street', $required_fields));
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= form_textfield('Additional', $form_name .'][additional', isset($prefilled_values['additional']) ? $prefilled_values['additional'] : '', 64, 64);
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= form_textfield('City', $form_name .'][city', isset($prefilled_values['city']) ? $prefilled_values['city'] : '', 64, 64, NULL, NULL, in_array('city', $required_fields));
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= _location_province_select_options(isset($prefilled_values['province']) ? $prefilled_values['province'] : '', in_array('province', $required_fields), in_array('country', array_keys($suppressed_values)) ? $suppressed_values['country'] : NULL, $form_name);
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= form_textfield('Postal Code', $form_name .'][postal_code', isset($prefilled_values['postal_code']) ? $prefilled_values['postal_code'] : '', 16, 16, NULL, NULL, in_array('postal_code', $required_fields));
-    $form .= "</div>\n";
-    $form .= '<div class="container-inline">';
     $form .= _location_country_select_options(isset($prefilled_values['country']) ? $prefilled_values['country'] : '', in_array('country', $required_fields), $form_name);
-    $form .= "</div>\n";
   }
   
   return $form;
 }
 
 function location_latlon_form($form_name = 'location', $description = '', $prefilled_values = array()) {
-  $form  = '<div class="container-inline">';
   $form .= form_textfield('Latitude', $form_name .'][latitude', isset($prefilled_values['latitude']) ? $prefilled_values['latitude'] : '', 64, 64);
   $form .= form_textfield('Longitude', $form_name .'][longitude', isset($prefilled_values['longitude']) ? $prefilled_values['longitude'] : '', 64, 64);
-  $form .= '</div>';
   $form = form_group('', $form, $description);
   return $form;
 }
