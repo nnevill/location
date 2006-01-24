@@ -20,9 +20,18 @@ include_once LOCATION_PATH.'/location.inc';
 function location_menu($may_cache = FALSE) {
   $items = array();
   if ($may_cache) {
-    $items[] = array('path' => 'search/location', 'title' => t('by location'), 'callback' => 'location_search_form_page', 'access' => user_access('search content'), 'type' => MENU_LOCAL_TASK, 'weight' => 9);
-    $items[] = array('path' => 'admin/settings/location/main', 'title' => t('main settings'), 'type' => MENU_DEFAULT_LOCAL_TASK);
-    $items[] = array('path' => 'admin/settings/location/maplinking', 'title' => t('map links'), 'callback' => 'location_map_link_options_page', 'access' => user_access('administer site configuration'), 'type' => MENU_LOCAL_TASK);
+    $items[] = array('path' => 'location', 'title' => t('content by location'),
+               'callback' => 'location_content',
+               'access' => user_access('view location'),
+               'type' => MENU_SUGGESTED_ITEM, 'weight' => 9);
+    $items[] = array('path' => 'search/location', 'title' => t('by location'),
+               'callback' => 'location_search_form_page', 'access' => user_access('search content'),
+               'type' => MENU_LOCAL_TASK, 'weight' => 9);
+    $items[] = array('path' => 'admin/settings/location/main', 'title' => t('main settings'),
+               'type' => MENU_DEFAULT_LOCAL_TASK);
+    $items[] = array('path' => 'admin/settings/location/maplinking', 'title' => t('map links'),
+               'callback' => 'location_map_link_options_page', 'access' => user_access('administer site configuration'),
+               'type' => MENU_LOCAL_TASK);
   }
   else {
     drupal_set_html_head(location_form_html_head());
@@ -31,7 +40,7 @@ function location_menu($may_cache = FALSE) {
 }
 
 function location_perm() {
-  return array('submit latitude/longitude');
+  return array('submit latitude/longitude', 'view location section');
 }
 
 /**
@@ -57,6 +66,394 @@ function location_help($section) {
       return t('Enables the location system and allow users to attach locative information to content.');
   }
 }
+
+
+/**
+ * Menu callback; checks path (under /location/) and directs request to relevant functions.
+ */
+function location_content($a = NULL, $b = NULL, $c = NULL, $d = NULL, $e = NULL) {
+  
+  // set defaults //
+  $categories = array($a,$b,$c,$d,$e);
+  $location_arguments = array();
+  $is_kml = 0;
+  $is_networklink = 0;
+  $is_rss = 0;
+  $is_iframe = 0;
+  $country = '';
+
+  // retrieve list of country codes from elsewhere in module //
+  $supported_countries = _location_supported_countries();
+
+  // work through levels in path, set flags where necessary and read in country code if present //
+  for ($cat_count = count($categories)-1; $cat_count >= 0; $cat_count--) {
+    if ($categories[$cat_count]) {
+      switch ($categories[$cat_count]) {
+        case 'networklink':
+          $is_networklink = 1;
+          break;
+        case 'kml':
+          $is_kml = 1;
+          break;
+        case 'feed':
+          $is_feed = 1;
+          break;
+        default:
+          // check to see if it is a valid country and lookup name //
+          if (array_key_exists($categories[$cat_count],$supported_countries)) {
+            $isocode = $categories[$cat_count];
+            $countryname = $supported_countries[$isocode];
+          }
+      }
+    }
+  }
+
+  if ($isocode) {
+    $location_arguments[] = array('isocode' => $isocode);
+    $location_arguments[] = array('country' => $countryname);
+  }
+
+  if (!$is_feed) {
+    // if not a feed, display page
+    location_content_page_last($location_arguments);
+  }
+  else {
+    if (!$is_kml) {
+      // if not KML, then generate RSS
+      location_content_feed_last($location_arguments);
+    }
+    else {
+      if (!$is_networklink) {
+        // if not network link, generate KML feed
+        location_content_kml_last($location_arguments);
+      }
+      else {
+        //generate KML network link
+        location_content_networklink($location_arguments);
+      }
+    }
+  }
+
+}
+
+
+/**
+ * Displays a KML feed containing recent location-enabled nodes.
+ */
+function location_content_kml_last($location_arguments = array()) {
+  foreach ($location_arguments as $location_argument) {
+    foreach ($location_argument as $key => $value) {
+      switch ($key) {
+        case 'isocode':
+          $isocode = $value;
+          $country_restrict = "AND l.country = '$isocode'";
+        case 'country':
+          $country = $value;
+      }
+    }
+  }
+
+  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, n.teaser, n.created, u.name, u.uid FROM {node} n INNER JOIN {location} l ON n.nid = l.oid INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND l.source != 0 $country_restrict ORDER BY n.created DESC"), 0, 15);
+
+  $site = variable_get('site_name', 'drupal');
+  if (isset($isocode)) {
+    $title = t('%site content in %country', array('%site' => $site, '%country' => $country));
+  }
+  else {
+    $title = t('%site content worldwide', array('%site' => $site));
+  }
+
+  $channel['title'] .= $title;
+  $channel['link'] = url('location', NULL, NULL, TRUE);
+  $channel['description'] = $term->description;
+  format_kml_feed($result, $channel);
+}
+
+
+/**
+ * A generic function for generating KML (Keyhole Markup Language for Google Earth) feeds from a set of nodes.
+ *
+ * @param $nodes
+ *   An object as returned by db_query() which contains the nid field.
+ * @param $channel
+ *   An associative array containing title, link, description and other keys.
+ *   The link should be an absolute URL.
+ */
+function format_kml_feed($nodes = 0, $channel = array()) {
+
+  $items = '';
+  while ($node = db_fetch_object($nodes)) {
+    // Load the specified node:
+    $item = node_load(array('nid' => $node->nid));
+    $link = url("node/$node->nid", NULL, NULL, 1);
+
+    // Filter and prepare node teaser
+    if (node_hook($item, 'view')) {
+      node_invoke($item, 'view', TRUE, FALSE);
+    }
+    else {
+      $item = node_prepare($item, TRUE);
+    }
+
+    // Allow modules to change $node->teaser before viewing.
+    node_invoke_nodeapi($item, 'view', true, false);
+
+    // Allow modules to add additional item fields
+    $extra = node_invoke_nodeapi($item, 'kml item');
+    $items .= format_kml_placemark($item->title, $link, $item->teaser, $item->location['latitude'], $item->location['longitude'], 0, $extra);
+  }
+
+  $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  $output .= "<kml xmlns=\"http://earth.google.com/kml/2.0\">\n";
+  $output .= " <Document>\n";
+  $output .= format_kml_folder($channel['title'], $channel['description'], $items, $extras);
+  $output .= " </Document>\n";
+  $output .= "</kml>\n";
+
+  drupal_set_header('Content-Type: application/vnd.google-earth.kml+xml');
+  print $output;
+}
+
+
+/**
+ * Formats a KML Folder (based on format_rss_channel()).
+ *
+ * Arbitrary elements may be added using the $args associative array.
+ */
+function format_kml_folder($title, $description, $items, $args = array()) {
+  // arbitrary elements may be added using the $args associative array
+
+  $output = "  <Folder>\n";
+  $output .= '   <name>'. check_plain($title) ."</name>\n";
+  $output .= '   <description>'. check_plain($description) ."</description>\n";
+  if ($args) {
+    foreach ($args as $key => $value) {
+      $output .= '  <'. $key .'>'. check_plain($value) ."</$key>\n";
+    }
+  }
+  $output .= $items;
+  $output .= "  </Folder>\n";
+
+  return $output;
+}
+
+
+/**
+ * Format a single KML Placemark (based on format_rss_item()).
+ *
+ * Arbitrary elements may be added using the $args associative array.
+ */
+function format_kml_placemark($title, $link, $description, $lat = 0, $long = 0, $alt = 0, $args = array()) {
+  $output = "   <Placemark>\n";
+  $output .= '    <name>'. check_plain($title) ."</name>\n";
+  $output .= '    <description>'. check_plain($description .'<br/><a href="'. check_url($link) .'">'. t('View page') .'</a>') ."</description>\n";
+  $output .= "    <Point>\n"; 
+  $coordinates = $long. ','. $lat. ','. $alt;
+  $output .= '     <coordinates>'. $coordinates ."</coordinates>\n";
+  $output .= "    </Point>\n";
+  foreach ($args as $key => $value) {
+    if (is_array($value)) {
+      if ($value['key']) {
+        $output .= '    <'. $value['key'];
+        if (is_array($value['attributes'])) {
+          $output .= drupal_attributes($value['attributes']);
+        }
+
+        if ($value['value']) {
+          $output .= '>'. $value['value'] .'</'. $value['key'] .">\n";
+        }
+        else {
+          $output .= " />\n";
+        }
+      }
+    }
+    else {
+      $output .= '    <'. $key .'>'. check_plain($value) ."</$key>\n";
+    }
+  }
+  $output .= "   </Placemark>\n";
+
+  return $output;
+}
+
+
+/**
+ * A function for creating a KML Network Link for a specific KML feed.
+ *
+ */
+function location_content_networklink($location_arguments = array()) {
+  foreach ($location_arguments as $location_argument) {
+    foreach ($location_argument as $key => $value) {
+      switch ($key) {
+        case 'isocode':
+          $isocode = $value;
+        case 'country':
+          $country = $value;
+      }
+    }
+  }
+
+  $site = variable_get('site_name', 'drupal');
+  if (isset($isocode)) {
+    $title = t('%site content in %country', array('%site' => $site, '%country' => $country));
+  }
+  else {
+    $title = t('%site content worldwide', array('%site' => $site));
+  }
+
+  // set link to KML feed to send out through Network Link
+  $kml_feed = url(NULL, NULL, NULL, TRUE);
+  if (isset($isocode)) { 
+    $kml_feed .= 'location/'.$isocode.'/feed/kml'; 
+  } 
+  else { 
+    $kml_feed .= 'location/feed/kml'; 
+  }
+
+  $url['name'] = $title;
+  $url['href'] = $kml_feed;
+  $url['refreshMode'] = 'onInterval';
+  $url['refreshInterval'] = 60;
+  $url['viewRefreshMode'] = 'onStop';
+  $url['viewRefreshTime'] = 0;
+
+  $output = format_kml_networklink($title,$kml_feed,$url);
+
+  drupal_set_header('Content-Type: application/vnd.google-earth.kml+xml');
+  print $output;
+}
+
+
+/**
+ * A generic function for generating a KML (Keyhole Markup Language for Google Earth) Network Link.
+ *
+ * Arbitrary elements may be added using the $args associative array.
+ */
+function format_kml_networklink($title, $kml_feed, $url_items = array(), $args = array()) {
+  $output = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+  $output .= "<kml xmlns=\"http://earth.google.com/kml/2.0\">\n";
+  $output .= " <Document>\n";
+  $output .= "  <NetworkLink>\n";
+  $output .= "   <Url>\n";
+  foreach ($url_items as $url_item => $value) {
+    $output .= '    <'. $url_item .'>'. check_plain($value) .'</'. $url_item .">\n";
+  }
+  $output .= "   </Url>\n";
+  $output .= "  </NetworkLink>\n";
+  $output .= " </Document>\n";
+  $output .= "</kml>\n";
+
+  return $output;
+}
+
+
+/**
+ * Displays an RSS feed containing recent location-enabled nodes.
+ */
+function location_content_feed_last($location_arguments = array()) {
+  foreach ($location_arguments as $location_argument) {
+    foreach ($location_argument as $key => $value) {
+      switch ($key) {
+        case 'isocode':
+          $isocode = $value;
+          $country_restrict = "AND l.country = '$isocode'";
+        case 'country':
+          $country = $value;
+      }
+    }
+  }
+
+  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, n.teaser, n.created, u.name, u.uid FROM {node} n INNER JOIN {location} l ON n.nid = l.oid INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND l.source != 0 $country_restrict ORDER BY n.created DESC"), 0, 15);
+
+  $site = variable_get('site_name', 'drupal');
+  if (isset($isocode)) {
+    $title = t('%site content in %country', array('%site' => $site, '%country' => $country));
+  }
+  else {
+    $title = t('%site content worldwide', array('%site' => $site));
+  }
+
+  $channel['title'] .= $title;
+  $channel['link'] = url('location', NULL, NULL, TRUE);
+  $channel['description'] = $term->description;
+  node_feed($result, $channel);
+}
+
+
+/**
+ * Displays a Drupal page containing recent location-enabled entries.
+ */
+function location_content_page_last($location_arguments = array()) {
+  $output = '';
+
+  foreach ($location_arguments as $location_argument) {
+    foreach ($location_argument as $key => $value) {
+      switch ($key) {
+        case 'isocode':
+          $isocode = $value;
+          $country_restrict = "AND l.country = '$isocode'";
+        case 'country':
+          $country = $value;
+      }
+    }
+  }
+  
+  $result = pager_query(db_rewrite_sql("SELECT n.nid, n.title, n.teaser, n.created, u.name, u.uid FROM {node} n INNER JOIN {location} l ON n.nid = l.oid INNER JOIN {users} u ON n.uid = u.uid WHERE n.status = 1 AND l.source != 0 $country_restrict ORDER BY n.created DESC"), variable_get('default_nodes_main', 10));
+
+  // output items to page
+  while ($node = db_fetch_object($result)) {
+    $output .= node_view(node_load(array('nid' => $node->nid)), 1);
+  }
+  $output .= theme('pager', NULL, variable_get('default_nodes_main', 10));
+
+  // add list of links to country-specific listings (only countries with content)
+  $supported_countries = _location_supported_countries();
+  $result = db_query("SELECT l.country FROM {location} l WHERE l.country != '' AND l.country != 'xx' GROUP BY l.country ORDER BY l.country ASC");
+  $country_links[] = '<a href="location">all</a>';
+  while ($country_link = db_fetch_object($result)) {
+    $country_links[] = '<a href="location/'. $country_link->country .'">'. $supported_countries[$country_link->country] .'</a>';
+  }
+  $output .= t('Countries with content:');
+  $country_links_remaining = count($country_links);
+  foreach ($country_links as $country_link) {
+    $country_links_remaining--;
+    $output .= ' '. $country_link;
+    if ($country_links_remaining > 0) {
+      $output .= ',';
+    }
+  }
+
+  // set appropriate location of rss and kml feeds and also page title
+  if (isset($isocode)) { 
+    $xml_feed = 'location/'.$isocode.'/feed'; 
+    $kml_feed = 'location/'.$isocode.'/feed/kml/networklink'; 
+    $title = t('Content in %country', array('%country' => $country));
+  } 
+  else { 
+    $xml_feed = 'location/feed'; 
+    $kml_feed = 'location/feed/kml'; 
+    $title = t('Content around the world');
+  }
+  drupal_set_title($title);
+
+  // add xml and kml icons to page, linking to relevant feeds
+  $output .= theme('xml_icon', url($xml_feed));
+  $output .= '<a href="'.$kml_feed.'" title="'.t('KML feed').'"><img src="http://earth.google.com/images/google_earth_feed.gif" alt="'.t('KML feed').'" /></a>';
+
+  // add rel tags to page to assist in automatic discovery of feeds
+  drupal_add_link(array('rel' => 'alternate',
+                        'type' => 'application/rss+xml',
+                        'title' => t('RSS - location enabled pages'),
+                        'href' => url($xml_feed)));
+  drupal_add_link(array('rel' => 'alternate',
+                        'type' => 'application/vnd.google-earth.kml+xml',
+                        'title' => t('KML - location enabled pages'),
+                        'href' => url($kml_feed)));
+
+  print theme('page', $output);
+}
+
+
 
 /**
  * Serves a search-by-location page for nodes.
@@ -534,7 +931,8 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     case 'rss item':
       $items = array();
       if (!is_null($node->location['lat']) && !is_null($node->location['lon'])) {
-        $items[] = array('key' => 'geo:Point', 'value' => "<geo:lat>\n  ". $node->location['lat'] ."</geo:lat>\n  <geo:long>". $node->location['lon'] ."</geo:long>\n");
+        $items[] = array('key' => 'geo:Point', 'value' => "<geo:lat>". $node->location['lat'] ."</geo:lat><geo:long>". $node->location['lon'] ."</geo:long>");
+
         $items[] = array('key' => 'icbm:latitude', 'value' => $node->location['lat']);
         $items[] = array('key' => 'icbm:longitude', 'value' => $node->location['lon']);
         $items[] = array('key' => 'geourl:latitude', 'value' => $node->location['lat']);
