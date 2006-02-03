@@ -991,7 +991,7 @@ function location_settings() {
   
   $form .= form_radios(t('Distance unit for location-based searches'), 'location_search_distance_unit', variable_get('location_search_distance_unit', 0), array(0 => t('Allow both miles and kilometers.'), 'mile' => t('Only allow a search-radius to be specified in miles'), 'km' => t('Only allow a search-radius to be specified in kilometers')), t('Select the distance unit that applies when users search for content by a specified location and search-radius.'));
   
-  $form .= form_radios(t('Toggle location display'), 'location_display_location', variable_get('location_display_location', 1), array(0 => t('Disable the display of locations.'), 1 => t('Enable the display of locations locations.')), t('If you are interested in turning off locations and having a custom theme control their display, you may want to disable the display of locations so your theme can take over them.'));
+  $form .= form_radios(t('Toggle location display'), 'location_display_location', variable_get('location_display_location', 1), array(0 => t('Disable the display of locations.'), 1 => t('Enable the display of locations.')), t('If you are interested in turning off locations and having a custom theme control their display, you may want to disable the display of locations so your theme can take over them.'));
   
   if (!module_exist('civicrm')) {
     $form .= form_radios('User locations', 'location_user', variable_get('location_user', 0), array('Disable', 'Enable'), t('Collect user addresses (partial or full) if users wish to submit them for their user accounts.'));
