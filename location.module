@@ -524,7 +524,7 @@ function location_search_form_page() {
           $page_count = db_num_rows($res);
           $results_offset = isset($_GET['from']) ? $_GET['from'] : 0;
           $postal_data = location_get_postalcode_data($edit['location']);
-          $search_results_message = t('Displaying results %a - %b of %count for search on %c', array('%a' => $results_offset + 1, '%b' => $results_offset + $page_count, '%count' => $count->result_count, '%c' => '<em>'. $edit['location']['postal_code'] .'</em> ('. $postal_data['city'] . ', '. $postal_data['province'] .')'));
+          $search_results_message = t('Displaying results %a - %b of %count for search on %c', array('%a' => $results_offset + 1, '%b' => $results_offset + $page_count, '%count' => $count->result_count, '%c' => '<em>'. filter_xss($edit['location']['postal_code']) .'</em> ('. $postal_data['city'] . ', '. $postal_data['province'] .')'));
         }
         else {
           if (isset($_POST['edit']) && !isset($_GET['from'])) {
