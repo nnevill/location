@@ -421,7 +421,7 @@ function location_form2api($location = array()) {
   foreach ($location as $key => $value) {
     $value = trim($value);
     if ($key == 'province') {
-      if (strlen($value) && $value != 'xx') {
+      if (strlen($value) && $value != 'xx' && substr($value, 2, 1) == '-') {
         // chop off the 2-letter code and the '-' from the front of the value
         $value = substr($value, 3);
       }
