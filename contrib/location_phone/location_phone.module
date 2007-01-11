@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 function location_phone_form_alter($form_id, &$form) {
   if (isset($form['type']) && $form['type']['#value'] .'_node_settings' == $form_id) {
@@ -51,6 +52,14 @@ function location_phone_locationapi(&$location, $op) {
       break;
     case 'delete':
       db_query('DELETE FROM {location_phone} WHERE lid = %d', $location['lid']);
+      break;
+  }
+}
+
+function location_phone_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('Adds ability to include a phone-number field for locations.  NOTE: Requires location.');
       break;
   }
 }
