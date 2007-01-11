@@ -1000,7 +1000,9 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       
     case 'view':
       if (variable_get('location_display_location', 1)) {
-        if (isset($_POST) && ($_POST['op'] == t('Preview') || ($_POST['op'] == t('Submit') && form_get_errors()))) {
+        $is_preview = isset($_POST) && ($_POST['op'] == t('Preview') || ($_POST['op'] == t('Submit') && form_get_errors()));
+      
+        if ($is_preview) {
           $posted_locations = array();
           
           foreach ($node->locations as $index => $location) {   
@@ -1034,7 +1036,7 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
       }
       
-      if (count($node->locations) < variable_get('location_maxnum_'. $node->type, 0) && !$teaser && node_access('update', $node)) {
+      if (count($node->locations) < variable_get('location_maxnum_'. $node->type, 0) && !$teaser && node_access('update', $node) && !$is_preview) {
         $location_fields = array();
         $required_fields = array();
         foreach (array_keys(location_field_names()) as $field_name) {
@@ -1066,7 +1068,7 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
             '#value' => "<br/>\n"
           );
           
-          $form['location'] = array_merge($form['location'], location_latlon_form(t('If you wish to supply your own latitude/longitude, you may do so here.  Leaving these fields blank means that the system will determine a latitude/longitude for you, if possible.'), array()));          
+          $form['location'] = array_merge($form['location'], location_latlon_form(t('If you wish to supply your own latitude/longitude, you may do so here.  Leaving these fields blank means that the system will determine a latitude/longitude for you, if possible.'), array()));
         }
         
         $form['location']['nid'] = array(
@@ -1077,7 +1079,8 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         
         $form['location']['submit'] = array(
           '#type' => 'submit',
-          '#value' => t('Add location')
+          '#value' => t('Add location'),
+          '#weight' => 10
         );
         
         $node->body .= drupal_get_form('location_extra', $form);
