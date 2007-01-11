@@ -36,6 +36,28 @@ function location_phone_form_alter($form_id, &$form) {
       );
     }
   }
+  elseif ($form_id == 'location_extra') {
+    $arg0 = arg(0);
+    $arg1 = arg(1);
+    $arg2 = arg(2);
+    if ($arg0 == 'node' && is_numeric($arg1) && empty($arg2)) {
+      // We clearly are viewing a node, and since it's already loaded into a static array, node_load()ing it costs nothing
+      $node = node_load($arg1);
+      if (variable_get('location_phone_'. $node->type, 0)) {
+        $form['location']['phone'] = array_merge(
+          is_array($form['location']['phone']) ? $form['location']['phone'] : array(),
+          array(
+            '#type' => 'textfield',
+            '#title' => t('Phone number'),
+            '#size' => 31,
+            '#maxlength' => 31,
+            '#required' => (count($node->locations) == 0 && variable_get('location_phone_'. $type, 0) == 2),
+            '#weight' => 8
+          )
+        );
+      }
+    }
+  }
 }
 
 function location_phone_locationapi(&$location, $op) {
