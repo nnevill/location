@@ -28,4 +28,7 @@ function location_phone_install() {
   drupal_set_message(t('Installed tables for module location_phone'));
 }
 
+//TODO: drop 'postal_code' column in pgsql version of table
+//That's what you get for a lousy copy-paste-modify job
+
 ?>
