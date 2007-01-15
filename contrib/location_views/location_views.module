@@ -1026,7 +1026,7 @@ function location_views_map_input_form() {
   
   $form = array();
   
-  if (!module_exists('gmap')) return $form;
+  if (!module_exist('gmap')) return $form;
 
   $user = $GLOBALS['user'];
   $res=db_query("SELECT * FROM {location} WHERE eid=%d AND type='user'",$user->uid);
