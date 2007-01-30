@@ -1083,7 +1083,9 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           '#weight' => 10
         );
         
-        $node->body .= drupal_get_form('location_extra', $form);
+        $extra_form_html = drupal_get_form('location_extra', $form);
+        $node->body .= $extra_form_html;
+        $node->location_extra_form = $extra_form_html;
       }
       break;
 
