@@ -803,7 +803,7 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
     
       foreach ($node->locations as $index => $location) {
         $node->locations[$index] = location_form2api($node->locations[$index]);
-      
+
         if (user_access('submit latitude/longitude')) {
           $node->locations[$index]['latitude'] = trim($node->locations[$index]['latitude']);
           $node->locations[$index]['longitude'] = trim($node->locations[$index]['longitude']);
@@ -926,13 +926,18 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         // IF $index == 0, then 
         //   --> if no other fields are enabled, we consider the country to be important and save the location
         //   --> if other fields are enabled, but are all left blank, we consider the location empty and don't save
+        //   --> if latitude and longitude coordinates are entered then we save the location
         // IF $index != 1, then
-        //   --> if no other fields are saved, we don't save
+        //   --> if country is default and no other fields are saved, we don't save
+        //   --> if latitude and longitude coordinates are entered then we save the location
         
         $keep = FALSE;
-        if (!empty($node->locations[$index]['country'])) {
-          if ($index == 0) {
+        if (!empty($node->locations[$index]['country']) || (!empty($node->locations[$index]['latitude']) && !empty($node->locations[$index]['longitude']))) {
+          if ($index == 0) {  // first location
             if (in_array('country', $required_fields)) {
+              $keep = TRUE;
+            }
+            if (isset($node->locations[$index]['latitude']) && isset($node->locations[$index]['longitude'])) {
               $keep = TRUE;
             }
             elseif (count($location_fields) == 1) {
@@ -948,9 +953,17 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
               }
             }
           }
-          else {
+          else {  // not first location
             foreach ($location_fields as $field) {
-              if ($field != 'country' && !empty($node->locations[$index][$field])) {
+              if ($field == 'country' && $node->locations[$index][$field] != variable_get('location_default_country', 'us')) {
+                $keep = TRUE;
+                break;
+              }
+              elseif (!empty($node->locations[$index]['latitude']) && !empty($node->locations[$index]['longitude'])) {
+                $keep = TRUE;
+                break;
+              }
+              elseif ($field != 'country' && !empty($node->locations[$index][$field])) {
                 $keep = TRUE;
                 break;
               }
