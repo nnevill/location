@@ -114,55 +114,62 @@ function theme_location($location = array(), $hide = array()) {
   if (_location_nothing_to_show($location, $hide)) {
     return '';
   }
+
   $output = '';
   $country_specific_function = 'theme_location_'. (isset($location['country']) ? $location['country'] : '');
   if (function_exists($country_specific_function)) {
-    $output .= $country_specific_function($location);
+    $output .= $country_specific_function($location, $hide);
   }
   elseif (count($location)) {
     $output .= "\n";
-    $output .= '<dl class="location">'."\n";
+    $output .= '<div class="location vcard"><div class="adr">'."\n";
     if (!empty($location['name']) && !in_array('name', $hide)) {
-       $output .= '<dd>'. $location['name'] .'</dd>';
+       $output .= '<div class="fn">'. $location['name'] .'</div>';
     }
 
     if (!empty($location['street']) && !in_array('street', $hide)) {
-      $output .= '<dd>'. $location['street'] .'</dd>';
-    }
-    
-    if (!empty($location['additional']) && !in_array('street', $hide)) {
-      $output .= '<dd>' . $location['additional'] . '</dd>';
-    }
-    
-    if ((!empty($location['city']) && !in_array('city', $hide)) || 
-        (!empty($location['province']) && !in_array('province', $hide)) || 
-        (!empty($location['postal_code']) && !in_array('postal_code', $hide))) {
-      $output .= '<dd>';
-      
-      $city_province_postal = array();
-      if (!empty($location['city']) && !in_array('city', $hide)) {
-        $city_province_postal[] = $location['city'];
+      $output .= '<div class="street-address">'. $location['street'];
+      if (!empty($location['additional']) && !in_array('street', $hide)) {
+        $output .= ' ' . $location['additional'];
       }
-      
+      $output .='</div>';
+    }
+
+    if (!empty($location['city']) && !in_array('city', $hide)) {
+      $city_province_postal[] = $location['city'];
+    }
+
+    if ((!empty($location['city']) && !in_array('city', $hide)) ||
+        (!empty($location['province']) && !in_array('province', $hide)) ||
+        (!empty($location['postal_codet']) && !in_array('postal_code', $hide))) {
+
+      $city_province_postal = array();
+
+      if (!empty($location['city']) && !in_array('city', $hide)) {
+        $city_province_postal[] = '<span class="locality">'. $location['city'] .'</span>';
+      }
+
       if (!empty($location['province']) && !in_array('province', $hide)) {
-        $city_province_postal[] = $location['province'];
+        $city_province_postal[] = '<span class="region">'. $location['province'] .'</span>';
       }
 
       if (!empty($location['postal_code']) && !in_array('postal_code', $hide)) {
-        $city_province_postal[] = $location['postal_code'];
+        $city_province_postal[] = '<span class="postal-code">'. $location['postal_code'] .'</span>';
       }
-      
+
       $output .= implode(', ', $city_province_postal);
-      
-      $output .= '</dd>';
     }
-    
+
     if (!empty($location['country']) && !in_array('country', $hide)) {
       $countries = _location_get_iso3166_list();
-      $output .= '<dd>'. $countries[$location['country']] . '</dd>';
+      $output .= '<div class="country-name">'. t($countries[$location['country']]) .'</div>';
     }
-    
-    $output .= '</dl>';
+
+    if (isset($location['latitude']) && isset($location['longitude'])) {
+      $output .=  '<div class="geo"><abbr class="latitude" title="'. $location['latitude'] .'" /><abbr class="longitude" title="'. $location['latitude'] .'" /></div>';
+    }
+
+    $output .= '</div></div>';
   }
 
   $output .= location_map_link($location);
@@ -1698,6 +1705,3 @@ function _location_get_iso3166_list() {
                'zw' => 'Zimbabwe'
               );
 }
-
- 
-?>
