@@ -201,8 +201,53 @@ function _location_ca_yahoo_csz_get_field($location) {
 
 function location_geocode_ca_providers() {
   return array(
-    'geocoder' => array('name' => 'GeoCode.ca geocoding service', 'url' => 'http://geocoder.ca/?api=1', 'tos' => 'http://geocoder.ca/?terms=1http://geocoder.ca/?terms=1')
+    'geocoder' => array('name' => 'GeoCode.ca geocoding service', 'url' => 'http://geocoder.ca/?api=1', 'tos' => 'http://geocoder.ca/?terms=1http://geocoder.ca/?terms=1'),
+    'google' => array('name' => 'Google Maps', 'url' => 'http://maps.google.com', 'tos' => 'http://www.google.com/help/terms_local.html')
   );
+}
+
+function location_geocode_ca_google_settings(){
+  $form = array();
+
+  $form['location_geocode_ca_google_apikey'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Google Maps API Key'),
+    '#size' => 64,
+    '#maxlength' => 128,
+    '#default_value' => variable_get('location_geocode_ca_google_apikey', ''),
+    '#description' => t('In order to use the Google Maps API geocoding web-service, you will need a Google Maps API Key.  You can obtain one at the !sign_up_link for the !google_maps_api.', array('!sign_up_link' => '<a href="http://www.google.com/apis/maps/signup.html">sign-up page</a>', '!google_maps_api' => '<a href="http://www.google.com/apis/maps/">Google Maps API</a>'))
+  );
+
+  return $form;
+}
+
+function location_geocode_ca_google($location = array()) {
+  $service_url = 'http://maps.google.com/maps/geo?output=xml&key='. variable_get('location_geocode_ca_google_apikey', '') .'&q=';
+
+  $address = location_address2singleline($location);
+  
+  $http_reply = drupal_http_request($service_url . urlencode($address));
+  
+  $status_code_match = array();
+  preg_match('/<code>(.*)<\/code>/', $http_reply->data, $status_code_match);
+  $status_code = $status_code_match[1];
+  if ($status_code != 200) {
+    return NULL;
+  }
+  
+  $accuracy_code_match = array();
+  preg_match('/Accuracy="([0-9])"/', $http_reply->data, $accuracy_code_match);
+  $accuracy_code = $accuracy_code_match[1];
+  if ($accuracy_code != 8 && $accuracy_code != 7) {
+    return NULL;
+  }
+  
+  $latlon_match = array();
+  preg_match('/<coordinates>(.*)<\/coordinates>/', $http_reply->data, $latlon_match);
+  
+  $latlon_exploded = explode(',', $latlon_match[1]);
+  
+  return array('lat' => $latlon_exploded[1], 'lon' => $latlon_exploded[0]);
 }
 
 /**

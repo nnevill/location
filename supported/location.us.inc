@@ -291,7 +291,6 @@ function location_geocode_us_yahoo($location = array()) {
 }
 
 function location_geocode_us_google($location = array()) {
-  $temp_key = 'ABQIAAAA4SAlKS5PGPmCp1M1lFSi9xR3cOHNVOtncaBOMo5NHmu-PYjzChQ8usI5DSvxnid-Hl-_BKyQgCeRNA';
   $service_url = 'http://maps.google.com/maps/geo?output=xml&key='. variable_get('location_geocode_us_google_apikey', '') .'&q=';
 
   $address = location_address2singleline($location);

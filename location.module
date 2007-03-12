@@ -61,14 +61,29 @@ function location_help($section) {
 //TODO: check/fix this: admin/content/configure/types above (still use %? still same url?)
 
 function location_search_get_form($edit = array()) {
-  $location_form = location_form(array('postal_code', 'country'), $edit, array('postal_code', 'country'), variable_get('location_suppress_country', 0) ? array('country' => variable_get('location_default_country', 'us')) : array(), '', 'location', 'nearby_postalcodes_bylocation');
+  $edit = array();
+  if($_POST['location']) {
+    $edit = $_POST['location'];
+  } else {
+    $edit = $_GET;
+  }
+  	
+  $location_form = location_form(
+	  array('postal_code', 'country'), 
+	  $edit, 
+	  array('postal_code', 'country'), 
+	  variable_get('location_suppress_country', 0) ? array('country' => variable_get('location_default_country', 'us')) : array(), 
+	  '', 
+	  'location', 
+	  'nearby_postalcodes_bylocation'
+  );
   
   $proximity_form = location_proximity_form(array(
                                               'distance' => (isset($edit['distance']) ? $edit['distance'] : 25), 
                                               'distance_unit' => (isset($edit['distance_unit']) ? $edit['distance_unit'] : 'mile')),
                                             variable_get('location_search_distance_unit', 0) ? array('distance_unit' => variable_get('location_search_distance_unit', 0)) : array()
                                            );
-
+  
   $form = array('location' => array_merge($proximity_form, $location_form));
   $form['location']['#tree'] = TRUE;
   $form['op'] = array(
@@ -85,8 +100,23 @@ function location_search_get_form($edit = array()) {
     $form['#redirect'] = array($_GET['q'], $get_query);
   }
   
+  #populate the country options in the country list.
+  $countries = array();
+  $supported_countries = location_get_iso3166_list();
+  $configured_countries = variable_get('location_configured_countries', array('us' => 1));
+  foreach(array_keys($configured_countries) as $key) { 
+	  if($configured_countries[$key] != "0") {
+		  $form['location']['country']['#options'][$key] = $supported_countries[$key];
+	  }
+  }
+  
   $form['#theme'] = 'location_search';
-  return drupal_get_form($form);  
+  $form['location']['postal_code']['#default_value'] = $edit['postal_code'];
+  $form['location']['distance']['#default_value'] = $edit['distance'];
+  $form['location']['distance_unit']['#default_value'] = $edit['distance_unit'];
+  $form['location']['country']['#default_value'] = $edit['country'];
+  
+  return $form;  
 }
 
 function theme_location_search(&$form) {
@@ -99,13 +129,22 @@ function theme_location_search(&$form) {
 }
 
 function location_search_view() {
+	//print_r($_POST);
+	//exit;
   if ($edit = $_POST['edit']) {
     $edit = $edit['location'];
     $form = drupal_get_form(array('location_search_get_form', $edit));
   }
   elseif (isset($_GET['postal_code']) && isset($_GET['distance']) && isset($_GET['distance_unit']) && isset($_GET['country'])) {
     $edit = array('postal_code' => $_GET['postal_code'], 'distance' => $_GET['distance'], 'distance_unit' => $_GET['distance_unit'], 'country' => $_GET['country']);
-    $form = drupal_get_form(array('location_search_get_form', $edit));
+    //$form = drupal_get_form(array('location_search_get_form', $edit));
+    $form = drupal_get_form('location_search_get_form');
+    $search_results = location_search_get_results($edit);
+  }
+  elseif (isset($_POST['location']['postal_code']) && isset($_POST['location']['distance']) && isset($_POST['location']['distance_unit']) && isset($_POST['location']['country'])) {
+    $edit = array('postal_code' => $_POST['location']['postal_code'], 'distance' => $_POST['location']['distance'], 'distance_unit' => $_POST['location']['distance_unit'], 'country' => $_POST['location']['country']);
+    //$form = drupal_get_form(array('location_search_get_form', $edit));
+    $form = drupal_get_form('location_search_get_form');
     $search_results = location_search_get_results($edit);
   }
   else {
@@ -113,6 +152,7 @@ function location_search_view() {
   }
   
   print theme('page', $form . (isset($search_results) ? $search_results : ''));
+  exit;
 }
 
 function location_search_get_results($edit = NULL) {
@@ -132,7 +172,7 @@ function location_search_get_results($edit = NULL) {
       if (count($postal_codes)) {
         $query_fragment = "'". implode(array_keys($postal_codes), ',') ."'";
         
-        $sql = "SELECT n.nid, a.postal_code, a.city, a.province, a.country, n.title, r.teaser, n.type, n.created, n.nid, u.name, FIND_IN_SET(CONCAT(country, postal_code), ". $query_fragment .") AS search_rank FROM {location} a INNER JOIN {node} n ON a.eid = n.vid INNER JOIN {users} u ON n.uid = u.uid INNER JOIN {node_revisions} r ON n.vid = r.vid WHERE a.type = 'node' AND FIND_IN_SET(CONCAT(a.country, a.postal_code), ". $query_fragment .") > 0 ORDER BY search_rank ASC, created DESC";
+        $sql = "SELECT n.nid, a.postal_code, a.city, a.province, a.country, n.title, r.teaser, n.type, n.created, n.nid, u.name, u.uid, FIND_IN_SET(CONCAT(country, postal_code), ". $query_fragment .") AS search_rank FROM {location} a INNER JOIN {node} n ON a.eid = n.vid INNER JOIN {users} u ON n.uid = u.uid INNER JOIN {node_revisions} r ON n.vid = r.vid WHERE a.type = 'node' AND FIND_IN_SET(CONCAT(a.country, a.postal_code), ". $query_fragment .") > 0 ORDER BY search_rank ASC, created DESC";
         $sql = db_rewrite_sql($sql);
 
         $count_sql = "SELECT COUNT(*) FROM {location} a INNER JOIN {node} n ON a.eid = n.vid INNER JOIN {users} u ON n.uid = u.uid WHERE a.type = 'node' AND FIND_IN_SET(CONCAT(a.country, a.postal_code), ". $query_fragment .") > 0";
@@ -149,7 +189,7 @@ function location_search_get_results($edit = NULL) {
           $page_count = db_num_rows($res);
           $results_offset = isset($_GET['from']) ? $_GET['from'] : 0;
           $postal_data = location_get_postalcode_data($location);
-          $search_results_message = t('Displaying results %a - %b of %count for search on %c', array('%a' => $results_offset + 1, '%b' => $results_offset + $page_count, '%count' => $count->result_count, '%c' => '<em>'. filter_xss($edit['postal_code']) .'</em> ('. $postal_data['city'] . ', '. $postal_data['province'] .')'));
+          $search_results_message = t('Displaying results %a - %b of %count for search on %c', array('%a' => $results_offset + 1, '%b' => $results_offset + $page_count, '%count' => $count->result_count, '%c' => filter_xss($edit['postal_code']).' ('. $postal_data['city'] . ', '. $postal_data['province'] .')'));
         } // TODO: remove filter_xss() or use something else....
         else {
           if (isset($_POST['edit']) && !isset($_GET['from'])) {
@@ -187,13 +227,13 @@ function location_search_get_results($edit = NULL) {
             else {
               $distance_unit = ($edit['distance_unit'] == 'km') ? t('km') : t('mile');
             }
-            $extra['distance'] = t('Approximately %distance from %location', array('%distance' => '<strong>'. round($result_location['distance']) .' '. $distance_unit .'</strong>', '%location' => $edit['postal_code']));
+            $extra['distance'] = t('Approximately %distance %distanceunit from <strong>%location</strong> ', array('%distance' => round($result_location['distance']), '%distanceunit' => $distance_unit, '%location' => $edit['postal_code']));
           }
           
           
           $item = array('link' => url('node/'. $row->nid), 
                         'title' => $row->title, 
-                        'type' => node_get_name($row),
+                        'type' => $row->type,
                         'user' => theme('username', $row), 
                         'date' => $row->created,
                         'snippet' => $row->teaser,
