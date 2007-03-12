@@ -345,10 +345,10 @@ function location_geocoding_parameters_form($country_iso, $service) {
     return system_settings_form($geocode_settings_form_function());
   }
   else {
-    return array(
+    return system_settings_form(array(
       '#type' => 'markup',
       '#value' => t('No configuration parameters are necessary, or a form to take such paramters has not been implemented.')
-    );
+    ));
   }
 }
 
@@ -413,10 +413,18 @@ function location_geocoding_options_form() {
       );
     }
     else {
-      $form['countries'][$country_iso]['location_geocode_config_link_'. $country_iso] = array(
-        '#type' => 'markup',
-        '#value' => l(t('Configure parameters'), 'admin/settings/location/geocoding/'. $country_iso .'/'. $current_value)
-      );
+      if (function_exists('location_geocode_'. $country_iso .'_'. $current_value .'_settings')) {
+        $form['countries'][$country_iso]['location_geocode_config_link_'. $country_iso] = array(
+          '#type' => 'markup',
+          '#value' => l(t('Configure parameters'), 'admin/settings/location/geocoding/'. $country_iso .'/'. $current_value)
+        );
+      }
+      else {
+        $form['countries'][$country_iso]['location_geocode_config_link_'. $country_iso] = array(
+          '#type' => 'markup',
+          '#value' => t('No configuration necessary for selected service.')
+        );
+      }
     }
   }
   

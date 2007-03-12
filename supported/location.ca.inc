@@ -199,6 +199,49 @@ function _location_ca_yahoo_csz_get_field($location) {
   return '';
 }
 
+function location_geocode_ca_providers() {
+  return array(
+    'geocoder' => array('name' => 'GeoCode.ca geocoding service', 'url' => 'http://geocoder.ca/?api=1', 'tos' => 'http://geocoder.ca/?terms=1http://geocoder.ca/?terms=1')
+  );
+}
+
+/**
+ * This needs some more work to cover errors and such. I think showing a proper
+ * Drupal error is a good idea. If an incorrect address is given to geocoder.ca
+ * it offers a suggestion. If this happens the drupal user should be told.
+ */
+function location_geocode_ca_geocoder($location = array()) {
+  $service_url = "http://geocoder.ca/?geoit=XML&locate=";
+
+  $address = location_address2singleline($location);
+
+  $http_reply = drupal_http_request($service_url . urlencode($address));
+
+  if ($http_reply->code == 400) {
+    return NULL;
+  }
+  else {
+    $matches = array();
+    $lat_match = array();
+    $lon_match = array();
+    $latlon = array();
+
+    if (preg_match('/<latt>(.*)<\/latt>/', $http_reply->data, $lat_match)) {
+      $latlon['lat'] = $lat_match[1];
+    }
+    else {
+      return NULL;
+    }
+
+    if (preg_match('/<longt>(.*)<\/longt>/', $http_reply->data, $lon_match)) {
+      $latlon['lon'] = $lon_match[1];
+      return $latlon;
+    }
+    else {
+      return NULL;
+    }
+  }
+}
 
 function location_province_list_ca() {
   return array('AB' => 'Alberta',
