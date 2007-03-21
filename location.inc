@@ -85,8 +85,10 @@ function _location_is_empty($location = array()) {
 
 function theme_locations($locations = array(), $hide = array()) {
   $output = '';
-  foreach ($locations as $location) {
-    $output .= theme('location', $location, $hide);
+  if (!empty($locations)) {
+    foreach ($locations as $location) {
+      $output .= theme('location', $location, $hide);
+    }
   }
   
   return $output;

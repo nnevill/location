@@ -761,6 +761,9 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 
   switch ($op) {
     case 'validate':
+      if (!isset($node->locations)) {
+        return;
+      }
       foreach ($node->locations as $index => $location) {
         // For now, validation just makes sure that required fields have any value
         // If syntax specific checks are implemented for locations in the future, they can be called as well.
@@ -814,6 +817,9 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         
     case 'insert':
     case 'update':
+      if (!isset($node->locations)) {
+        return;
+      }
       // handy to have these field names later
       $location_fields = array();
       $required_fields = array();
