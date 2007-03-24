@@ -341,7 +341,6 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         '#title' => t('Location name'),
         '#default_value' => isset($prefilled_values['name']) ? $prefilled_values['name'] : '',
         '#size' => 64,
-        '#maxlength' => 64,
         '#description' => t('e.g. a place of business, venue, meeting point'),
         '#attributes' => NULL,
         '#required' => in_array('name', $required_fields)
@@ -355,7 +354,6 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         '#title' => t('Street'),
         '#default_value' => isset($prefilled_values['street']) ? $prefilled_values['street'] : '',
         '#size' => 64,
-        '#maxlength' => 64,
         '#required' => in_array('street', $required_fields)
         );
     $form['additional'] = array(
@@ -365,7 +363,6 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         '#title' => t('Additional'),
         '#default_value' => isset($prefilled_values['additional']) ? $prefilled_values['additional'] : '',
         '#size' => 64,
-        '#maxlength' => 64
         );
   }
   if (in_array('city', $fields)) {
@@ -376,7 +373,6 @@ function location_form($fields = array(), $prefilled_values = array(), $required
         '#title' => t('City'),
         '#default_value' => isset($prefilled_values['city']) ? $prefilled_values['city'] : '',
         '#size' => 64,
-        '#maxlength' => 64,
         '#description' => NULL,
         '#attributes' => NULL,
         '#required' => in_array('city', $required_fields)
