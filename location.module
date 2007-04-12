@@ -54,7 +54,7 @@ function location_help($section) {
 <li>administer locative information at <a href="%admin-node-configure-types"> administer &gt;&gt; content types</a> to configure a type and see the locative information.</li>
 <li>administer location at <a href="%admin-settings-location">administer &gt;&gt; settings &gt;&gt; location</a>.</li>
 <li>use a database dump for a U.S. postal codes table that can be found at <a href="%external-http-trac-civicspacelabs-com-cgi-bin-trac-cgi-file-trunk-database-zipcodes-mysql">zipcode database</a>.</li>
-', array('%admin-node-configure-types' => url('admin/node/configure/types'), '%admin-settings-location' => url('admin/settings/location'), '%external-http-trac-civicspacelabs-com-cgi-bin-trac-cgi-file-trunk-database-zipcodes-mysql' => 'http://trac.civicspacelabs.com/cgi-bin/trac.cgi/file/trunk/database/zipcodes.mysql')) .'</ul>';
+', array('%admin-node-configure-types' => url('admin/settings/content-types'), '%admin-settings-location' => url('admin/settings/location'), '%external-http-trac-civicspacelabs-com-cgi-bin-trac-cgi-file-trunk-database-zipcodes-mysql' => 'http://trac.civicspacelabs.com/cgi-bin/trac.cgi/file/trunk/database/zipcodes.mysql')) .'</ul>';
       $output .= '<p>'. t('For more information please read the configuration and customization handbook <a href="%location">Location page</a>.', array('%location' => 'http://www.drupal.org/handbook/modules/location/')) .'</p>';
       return $output;
     case 'admin/modules#description':
