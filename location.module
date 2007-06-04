@@ -27,9 +27,6 @@ function location_menu($may_cache = FALSE) {
     $items[] = array('path' => 'admin/settings/location/geocoding', 'title' => t('Geocoding options'), 'callback' => 'location_geocoding_options_page', 'access' => user_access('administer site configuration'), 'type' => MENU_LOCAL_TASK, 'weight' => 2,);
     $items[] = array('path' => 'admin/settings/location', 'title' => t('Location'), 'description' => t('Settings for Location module'), 'callback' => 'drupal_get_form', 'callback arguments' => array('location_admin_settings'), 'access' => user_access('administer site configuration'), 'type' => MENU_NORMAL_ITEM, );
   }
-  else {
-    drupal_add_css(drupal_get_path('module', 'location') .'/location.css');
-  }
   return $items;
 }
 
