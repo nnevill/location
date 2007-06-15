@@ -116,9 +116,8 @@ function theme_location($location = array(), $hide = array()) {
   }
 
   $output = '';
-  $country_specific_function = 'theme_location_'. (isset($location['country']) ? $location['country'] : '');
-  if (function_exists($country_specific_function)) {
-    $output .= $country_specific_function($location, $hide);
+  if (isset($location['country']) && ($f = theme_get_function('location_'. $location['country']))) {
+    $output .= call_user_func($f, $location, $hide);
   }
   elseif (count($location)) {
     $output .= "\n";
