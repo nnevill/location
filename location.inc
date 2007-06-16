@@ -83,99 +83,6 @@ function _location_is_empty($location = array()) {
   return TRUE;
 }
 
-function theme_locations($locations = array(), $hide = array()) {
-  $output = '';
-  foreach ($locations as $location) {
-    $output .= theme('location', $location, $hide);
-  }
-  
-  return $output;
-}
-
-/**
- * Generates HTML for the passed location.
- *
- * @param $location
- *   An associative array where
- *      'street'       => A string representing the street location
- *      'additional'   => A string for any additional portion of the street location
- *      'city'         => A string for the city name
- *      'province'     => The standard postal abbreviation for the province
- *      'country'      => The two-letter ISO code for the country of the location (REQUIRED)
- *      'postal_code'  => The international postal code for the location
- *
- * @param $hide
- *   An linear array where the values are the location fields to suppress in the themed display.
- *
- * @return
- *   An HTML string with special tags for locations.
- */
-function theme_location($location = array(), $hide = array()) {
-  if (_location_nothing_to_show($location, $hide)) {
-    return '';
-  }
-
-  $output = '';
-  if (isset($location['country']) && ($f = theme_get_function('location_'. $location['country']))) {
-    $output .= call_user_func($f, $location, $hide);
-  }
-  elseif (count($location)) {
-    $output .= "\n";
-    $output .= '<div class="location vcard"><div class="adr">'."\n";
-    if (!empty($location['name']) && !in_array('name', $hide)) {
-       $output .= '<div class="fn">'. $location['name'] .'</div>';
-    }
-
-    if (!empty($location['street']) && !in_array('street', $hide)) {
-      $output .= '<div class="street-address">'. $location['street'];
-      if (!empty($location['additional']) && !in_array('street', $hide)) {
-        $output .= ' ' . $location['additional'];
-      }
-      $output .='</div>';
-    }
-
-    if (!empty($location['city']) && !in_array('city', $hide)) {
-      $city_province_postal[] = $location['city'];
-    }
-
-    if ((!empty($location['city']) && !in_array('city', $hide)) ||
-        (!empty($location['province']) && !in_array('province', $hide)) ||
-        (!empty($location['postal_codet']) && !in_array('postal_code', $hide))) {
-
-      $city_province_postal = array();
-
-      if (!empty($location['city']) && !in_array('city', $hide)) {
-        $city_province_postal[] = '<span class="locality">'. $location['city'] .'</span>';
-      }
-
-      if (!empty($location['province']) && !in_array('province', $hide)) {
-        $city_province_postal[] = '<span class="region">'. $location['province'] .'</span>';
-      }
-
-      if (!empty($location['postal_code']) && !in_array('postal_code', $hide)) {
-        $city_province_postal[] = '<span class="postal-code">'. $location['postal_code'] .'</span>';
-      }
-
-      $output .= implode(', ', $city_province_postal);
-    }
-
-    if (!empty($location['country']) && !in_array('country', $hide)) {
-      $countries = _location_get_iso3166_list();
-      $output .= '<div class="country-name">'. t($countries[$location['country']]) .'</div>';
-    }
-
-    if (isset($location['latitude']) && isset($location['longitude'])) {
-      $output .=  '<div class="geo"><abbr class="latitude" title="'. $location['latitude'] .'" /><abbr class="longitude" title="'. $location['latitude'] .'" /></div>';
-    }
-
-    $output .= '</div></div>';
-  }
-
-  $output .= location_map_link($location);
-
-  return $output;
-}
-
 function _location_nothing_to_show($location = array(), $hide = array()) {
   foreach (array('street', 'city', 'province', 'postal_code', 'country') as $field) {
     if (isset($location[$field]) && strlen(trim($location[$field])) && !in_array($field, $hide)) {
@@ -321,7 +228,7 @@ function location_distance_between($latlonA = array(), $latlonB = array(), $dist
  *
  *        Note that in both cases, the first and third argument can take the same array since all the fields are being required.
  */
-function location_form($fields = array(), $prefilled_values = array(), $required_fields = array(), $suppressed_values = array(), $description = '', $form_name = 'location', $function = NULL) {
+function location_form($fields = array(), $prefilled_values = array(), $required_fields = array(), $suppressed_values = array(), $description = '', $function = NULL) {
   if (count($fields) == 0) {
     $fields = array('name', 'street', 'city', 'province', 'postal_code', 'country');
   }
@@ -334,12 +241,11 @@ function location_form($fields = array(), $prefilled_values = array(), $required
 
   if (in_array('name', $fields)) {
     $form['name'] = array(
-        '#prefix' => '<div class="container-inline">',
-        '#suffix' => "</div>\n",
         '#type' => 'textfield',
         '#title' => t('Location name'),
         '#default_value' => isset($prefilled_values['name']) ? $prefilled_values['name'] : '',
         '#size' => 64,
+        '#maxlength' => 64,
         '#description' => t('e.g. a place of business, venue, meeting point'),
         '#attributes' => NULL,
         '#required' => in_array('name', $required_fields)
@@ -347,31 +253,28 @@ function location_form($fields = array(), $prefilled_values = array(), $required
   }
   if (in_array('street', $fields)) {
     $form['street'] = array(
-        '#prefix' => '<div class="container-inline">',
-        '#suffix' => "</div>\n",
         '#type' => 'textfield',
         '#title' => t('Street'),
         '#default_value' => isset($prefilled_values['street']) ? $prefilled_values['street'] : '',
         '#size' => 64,
+        '#maxlength' => 64,
         '#required' => in_array('street', $required_fields)
         );
     $form['additional'] = array(
-        '#prefix' => '<div class="container-inline">',
-        '#suffix' => "</div>\n",
         '#type' => 'textfield',
         '#title' => t('Additional'),
         '#default_value' => isset($prefilled_values['additional']) ? $prefilled_values['additional'] : '',
         '#size' => 64,
+        '#maxlength' => 64
         );
   }
   if (in_array('city', $fields)) {
     $form['city'] = array(
-        '#prefix' => '<div class="container-inline">',
-        '#suffix' => "</div>\n",
         '#type' => 'textfield',
         '#title' => t('City'),
         '#default_value' => isset($prefilled_values['city']) ? $prefilled_values['city'] : '',
         '#size' => 64,
+        '#maxlength' => 64,
         '#description' => NULL,
         '#attributes' => NULL,
         '#required' => in_array('city', $required_fields)
@@ -386,14 +289,10 @@ function location_form($fields = array(), $prefilled_values = array(), $required
     }
     else {
       $form['province'] = _location_province_select_options(isset($prefilled_values['province']) ? $prefilled_values['province'] : '', in_array('province', $required_fields), in_array('country', array_keys($suppressed_values)) ? $suppressed_values['country'] : NULL);
-      $form['province']['#prefix'] = '<div class="container-inline">';
-      $form['province']['#suffix'] = "</div>\n";
     }
   }
   if (in_array('postal_code', $fields)) {
     $form['postal_code'] = array(
-        '#prefix' => '<div class="container-inline">',
-        '#suffix' => "</div>\n",
         '#type' => 'textfield',
         '#title' => t('Postal code'),
         '#default_value' => isset($prefilled_values['postal_code']) ? $prefilled_values['postal_code'] : '',
@@ -411,13 +310,14 @@ function location_form($fields = array(), $prefilled_values = array(), $required
     }
     else {
       $form['country'] = _location_country_select_options(isset($prefilled_values['country']) ? $prefilled_values['country'] : '', in_array('country', $required_fields), $function);
-      $form['country']['#prefix'] = '<div class="container-inline">';
-      $form['country']['#suffix'] = "</div>\n";
     }
   }
   
+  $form['#theme'] = 'location_form';
+  
   return $form;
 }
+
 
 function location_latlon_form($description = '', $prefilled_values = array()) {
   $form = array();
@@ -429,7 +329,6 @@ function location_latlon_form($description = '', $prefilled_values = array()) {
   }
   
   $form['latitude'] = array(
-      '#prefix' => '<div class="container-inline">',
       '#type' => 'textfield',
       '#title' => t('Latitude'),
       '#default_value' => isset($prefilled_values['latitude']) ? $prefilled_values['latitude'] : '',
@@ -443,7 +342,6 @@ function location_latlon_form($description = '', $prefilled_values = array()) {
       '#size' => 64,
       '#maxlength' => 64,
       '#description' => $description,
-      '#suffix' => '</div>'
       );
       
   if ($usegmap) {
@@ -546,46 +444,42 @@ function location_api2form($location = array()) {
  *   the caller of this function will be assumed to already have one.  
  *
  */
-function location_proximity_form($prefilled_values = array(), $suppressed_values = array(), $form_name = 'location') {
+function location_proximity_form($prefilled_values = array(), $suppressed_values = array()) {
   $form = array();
-
 
   if (in_array('distance', array_keys($suppressed_values))) {
     $form['distance'] = array(
-        '#type' => 'hidden',
-        '#value' => $suppressed_values['distance']
-        );
+      '#type' => 'hidden',
+      '#value' => $suppressed_values['distance']
+    );
   }
   else {
     $form['distance'] = array(
-        '#prefix' => t('Search within '),
-        '#type' => 'select',
-        '#title' => '',
-        '#default_value' => (isset($prefilled_values['distance']) ? $prefilled_values['distance'] : 25),
-        '#options' => array(5 => 5, 10 => 10, 25 => 25, 50 => 50, 100 => 100, 250 => 250),
-        '#description' => ''
-        );
+      '#type' => 'select',
+      '#default_value' => (isset($prefilled_values['distance']) ? $prefilled_values['distance'] : 25),
+      '#options' => drupal_map_assoc(array(5, 10, 25, 50, 100, 250)),
+    );
   }
   
-  if (in_array('distance_unit', array_keys($suppressed_values))) {
-    $form['distance_unit'] = array(
-        '#type' => 'hidden',
-        '#value' => $suppressed_values['distance_unit'],
-        '#suffix' => (($suppressed_values['distance_unit'] == 'mile') ? t(' miles') : t(' km')) . t(' of:')
-        );
+  if (in_array('unit', array_keys($suppressed_values))) {
+    $form['unit'] = array(
+      '#type' => 'hidden',
+      '#value' => $suppressed_values['unit']
+    );
   }
   else {
-    $form['distance_unit'] = array(
-        '#type' => 'select',
-        '#title' => '',
-        '#default_value' => (isset($prefilled_values['distance_unit']) ? $prefilled_values['distance_unit'] : 'mile'),
-        '#options' => array('mile' => 'miles', 'km' => 'km'),
-        '#suffix' => t(' of:')
-        );
+    $form['unit'] = array(
+      '#type' => 'select',
+      '#default_value' => (isset($prefilled_values['unit']) ? $prefilled_values['unit'] : 'mile'),
+      '#options' => array('mile' => 'miles', 'km' => 'km'),
+    );
   }
+  
+  $form['#theme'] = 'location_proximity_form';
   
   return $form;
 }
+
 
 /**
  * A helper function that tells you whether all the fields of an location are full (excluding the 'additional' field.
@@ -1453,253 +1347,250 @@ function location_get_iso3166_list() {
 }
 
 // The following is an array of all countrycode => country-name pairs as layed out in
-// ISO 3166 alpha-2. Based on list at http://download.geonames.org/export/dump/countryInfo.txt
+// ISO 3166-1 alpha-2
 function _location_get_iso3166_list() {
-  return array(
-    "ad" => "Andorra",
-    "af" => "Afghanistan",
-    "ax" => "Aland Islands",
-    "al" => "Albania",
-    "dz" => "Algeria",
-    "as" => "American Samoa",
-    "ao" => "Angola",
-    "ai" => "Anguilla",
-    "aq" => "Antarctica",
-    "ag" => "Antigua and Barbuda",
-    "ar" => "Argentina",
-    "am" => "Armenia",
-    "aw" => "Aruba",
-    "au" => "Australia",
-    "at" => "Austria",
-    "az" => "Azerbaijan",
-    "bs" => "Bahamas",
-    "bh" => "Bahrain",
-    "bd" => "Bangladesh",
-    "bb" => "Barbados",
-    "by" => "Belarus",
-    "be" => "Belgium",
-    "bz" => "Belize",
-    "bj" => "Benin",
-    "bm" => "Bermuda",
-    "bt" => "Bhutan",
-    "bo" => "Bolivia",
-    "ba" => "Bosnia and Herzegovina",
-    "bw" => "Botswana",
-    "bv" => "Bouvet Island",
-    "br" => "Brazil",
-    "io" => "British Indian Ocean Territory",
-    "vg" => "British Virgin Islands",
-    "bn" => "Brunei",
-    "bg" => "Bulgaria",
-    "bf" => "Burkina Faso",
-    "bi" => "Burundi",
-    "kh" => "Cambodia",
-    "cm" => "Cameroon",
-    "ca" => "Canada",
-    "cv" => "Cape Verde",
-    "ky" => "Cayman Islands",
-    "cf" => "Central African Republic",
-    "td" => "Chad",
-    "cl" => "Chile",
-    "cn" => "China",
-    "cx" => "Christmas Island",
-    "cc" => "Cocos (Keeling) Islands",
-    "co" => "Colombia",
-    "km" => "Comoros",
-    "cg" => "Congo (Brazzaville)",
-    "cd" => "Congo (Kinshasa)",
-    "ck" => "Cook Islands",
-    "cr" => "Costa Rica",
-    "hr" => "Croatia",
-    "cu" => "Cuba",
-    "cy" => "Cyprus",
-    "cz" => "Czech Republic",
-    "dk" => "Denmark",
-    "dj" => "Djibouti",
-    "dm" => "Dominica",
-    "do" => "Dominican Republic",
-    "tl" => "East Timor",
-    "ec" => "Ecuador",
-    "eg" => "Egypt",
-    "sv" => "El Salvador",
-    "gq" => "Equatorial Guinea",
-    "er" => "Eritrea",
-    "ee" => "Estonia",
-    "et" => "Ethiopia",
-    "fk" => "Falkland Islands",
-    "fo" => "Faroe Islands",
-    "fj" => "Fiji",
-    "fi" => "Finland",
-    "fr" => "France",
-    "gf" => "French Guiana",
-    "pf" => "French Polynesia",
-    "tf" => "French Southern Territories",
-    "ga" => "Gabon",
-    "gm" => "Gambia",
-    "ge" => "Georgia",
-    "de" => "Germany",
-    "gh" => "Ghana",
-    "gi" => "Gibraltar",
-    "gr" => "Greece",
-    "gl" => "Greenland",
-    "gd" => "Grenada",
-    "gp" => "Guadeloupe",
-    "gu" => "Guam",
-    "gt" => "Guatemala",
-    "gg" => "Guernsey",
-    "gn" => "Guinea",
-    "gw" => "Guinea-Bissau",
-    "gy" => "Guyana",
-    "ht" => "Haiti",
-    "hm" => "Heard Island and McDonald Islands",
-    "hn" => "Honduras",
-    "hk" => "Hong Kong S.A.R., China",
-    "hu" => "Hungary",
-    "is" => "Iceland",
-    "in" => "India",
-    "id" => "Indonesia",
-    "ir" => "Iran",
-    "iq" => "Iraq",
-    "ie" => "Ireland",
-    "im" => "Isle of Man",
-    "il" => "Israel",
-    "it" => "Italy",
-    "ci" => "Ivory Coast",
-    "jm" => "Jamaica",
-    "jp" => "Japan",
-    "je" => "Jersey",
-    "jo" => "Jordan",
-    "kz" => "Kazakhstan",
-    "ke" => "Kenya",
-    "ki" => "Kiribati",
-    "kw" => "Kuwait",
-    "kg" => "Kyrgyzstan",
-    "la" => "Laos",
-    "lv" => "Latvia",
-    "lb" => "Lebanon",
-    "ls" => "Lesotho",
-    "lr" => "Liberia",
-    "ly" => "Libya",
-    "li" => "Liechtenstein",
-    "lt" => "Lithuania",
-    "lu" => "Luxembourg",
-    "mo" => "Macao S.A.R., China",
-    "mk" => "Macedonia",
-    "mg" => "Madagascar",
-    "mw" => "Malawi",
-    "my" => "Malaysia",
-    "mv" => "Maldives",
-    "ml" => "Mali",
-    "mt" => "Malta",
-    "mh" => "Marshall Islands",
-    "mq" => "Martinique",
-    "mr" => "Mauritania",
-    "mu" => "Mauritius",
-    "yt" => "Mayotte",
-    "mx" => "Mexico",
-    "fm" => "Micronesia",
-    "md" => "Moldova",
-    "mc" => "Monaco",
-    "mn" => "Mongolia",
-    "me" => "Montenegro",
-    "ms" => "Montserrat",
-    "ma" => "Morocco",
-    "mz" => "Mozambique",
-    "mm" => "Myanmar",
-    "na" => "Namibia",
-    "nr" => "Nauru",
-    "np" => "Nepal",
-    "nl" => "Netherlands",
-    "an" => "Netherlands Antilles",
-    "nc" => "New Caledonia",
-    "nz" => "New Zealand",
-    "ni" => "Nicaragua",
-    "ne" => "Niger",
-    "ng" => "Nigeria",
-    "nu" => "Niue",
-    "nf" => "Norfolk Island",
-    "kp" => "North Korea",
-    "mp" => "Northern Mariana Islands",
-    "no" => "Norway",
-    "om" => "Oman",
-    "pk" => "Pakistan",
-    "pw" => "Palau",
-    "ps" => "Palestinian Territory",
-    "pa" => "Panama",
-    "pg" => "Papua New Guinea",
-    "py" => "Paraguay",
-    "pe" => "Peru",
-    "ph" => "Philippines",
-    "pn" => "Pitcairn",
-    "pl" => "Poland",
-    "pt" => "Portugal",
-    "pr" => "Puerto Rico",
-    "qa" => "Qatar",
-    "re" => "Reunion",
-    "ro" => "Romania",
-    "ru" => "Russia",
-    "rw" => "Rwanda",
-    "sh" => "Saint Helena",
-    "kn" => "Saint Kitts and Nevis",
-    "lc" => "Saint Lucia",
-    "pm" => "Saint Pierre and Miquelon",
-    "vc" => "Saint Vincent and the Grenadines",
-    "ws" => "Samoa",
-    "sm" => "San Marino",
-    "st" => "Sao Tome and Principe",
-    "sa" => "Saudi Arabia",
-    "sn" => "Senegal",
-    "rs" => "Serbia",
-    "cs" => "Serbia And Montenegro",
-    "sc" => "Seychelles",
-    "sl" => "Sierra Leone",
-    "sg" => "Singapore",
-    "sk" => "Slovakia",
-    "si" => "Slovenia",
-    "sb" => "Solomon Islands",
-    "so" => "Somalia",
-    "za" => "South Africa",
-    "gs" => "South Georgia and the South Sandwich Islands",
-    "kr" => "South Korea",
-    "es" => "Spain",
-    "lk" => "Sri Lanka",
-    "sd" => "Sudan",
-    "sr" => "Suriname",
-    "sj" => "Svalbard and Jan Mayen",
-    "sz" => "Swaziland",
-    "se" => "Sweden",
-    "ch" => "Switzerland",
-    "sy" => "Syria",
-    "tw" => "Taiwan",
-    "tj" => "Tajikistan",
-    "tz" => "Tanzania",
-    "th" => "Thailand",
-    "tg" => "Togo",
-    "tk" => "Tokelau",
-    "to" => "Tonga",
-    "tt" => "Trinidad and Tobago",
-    "tn" => "Tunisia",
-    "tr" => "Turkey",
-    "tm" => "Turkmenistan",
-    "tc" => "Turks and Caicos Islands",
-    "tv" => "Tuvalu",
-    "vi" => "U.S. Virgin Islands",
-    "ug" => "Uganda",
-    "ua" => "Ukraine",
-    "ae" => "United Arab Emirates",
-    "uk" => "United Kingdom",  // NOTE: switched from gb
-    "us" => "United States",
-    "um" => "United States Minor Outlying Islands",
-    "uy" => "Uruguay",
-    "uz" => "Uzbekistan",
-    "vu" => "Vanuatu",
-    "va" => "Vatican",
-    "ve" => "Venezuela",
-    "vn" => "Vietnam",
-    "wf" => "Wallis and Futuna",
-    "eh" => "Western Sahara",
-    "ye" => "Yemen",
-    "zm" => "Zambia",
-    "zw" => "Zimbabwe",
-  );
+  return array('ad' => 'Andorra',
+               'ac' => 'Ascension Island',
+               'ae' => 'United Arab Emirates',
+               'af' => 'Afghanistan',
+               'ag' => 'Antigua and Barbuda',
+               'ai' => 'Anguilla',
+               'al' => 'Albania',
+               'am' => 'Armenia',
+               'an' => 'Netherlands Antilles',
+               'ao' => 'Angola',
+               'aq' => 'Antarctica',
+               'ar' => 'Argentina',
+               'as' => 'American Samoa',
+               'at' => 'Austria',
+               'au' => 'Australia',
+               'aw' => 'Aruba',
+               'ax' => 'Aland Islands',
+               'az' => 'Azerbaijan',
+               'ba' => 'Bosnia and Herzegovina',
+               'bb' => 'Barbados',
+               'bd' => 'Bangladesh',
+               'be' => 'Belgium',
+               'bf' => 'Burkina Faso',
+               'bg' => 'Bulgaria',
+               'bh' => 'Bahrain',
+               'bi' => 'Burundi',
+               'bj' => 'Benin',
+               'bm' => 'Bermuda',
+               'bn' => 'Brunei Darussalam',
+               'bo' => 'Bolivia',
+               'br' => 'Brazil',
+               'bs' => 'Bahamas',
+               'bt' => 'Bhutan',
+               'bv' => 'Bouvet Island',
+               'bw' => 'Botswana',
+               'by' => 'Belarus',
+               'bz' => 'Belize',
+               'ca' => 'Canada',
+               'cc' => 'Cocos (Keeling) Islands',
+               'cd' => 'Democratic Republic of the Congo (formerly Zaire)',
+               'cf' => 'Central African Republic',
+               'cg' => 'Congo (Republic of the Congo)',
+               'ch' => 'Switzerland (Confoederatio Helvetica)',
+               'ci' => 'Cote d\'Ivoire (Ivory Coast)',
+               'ck' => 'Cook Islands',
+               'cl' => 'Chile',
+               'cm' => 'Cameroon',
+               'cn' => 'China',
+               'co' => 'Colombia',
+               'cr' => 'Costa Rica',
+               'cs' => 'Serbia and Montenegro',
+               'cu' => 'Cuba',
+               'cv' => 'Cape Verde',
+               'cx' => 'Christmas Island',
+               'cy' => 'Cyprus',
+               'cz' => 'Czech Republic',
+               'de' => 'Germany (Deutschland)',
+               'dj' => 'Djibouti',
+               'dk' => 'Denmark',
+               'dm' => 'Dominica',
+               'do' => 'Dominican Republic',
+               'dz' => 'Algeria',
+               'ec' => 'Ecuador',
+               'ee' => 'Estonia',
+               'eg' => 'Egypt',
+               'eh' => 'Western Sahara (formerly Spanish Sahara)',
+               'er' => 'Eritrea',
+               'es' => 'Spain (Espana)',
+               'et' => 'Ethiopia',
+               'fi' => 'Finland',
+               'fj' => 'Fiji',
+               'fk' => 'Falkland Islands',
+               'fm' => 'Federated States of Micronesia',
+               'fo' => 'Faroe Islands',
+               'fr' => 'France',
+               'ga' => 'Gabon',
+               //'gb' => 'United Kingdom',
+               'gd' => 'Grenada',
+               'ge' => 'Georgia',
+               'gf' => 'French Guiana',
+               'gh' => 'Ghana',
+               'gi' => 'Gibraltar',
+               'gl' => 'Greenland',
+               'gm' => 'Gambia',
+               'gn' => 'Guinea',
+               'gp' => 'Guadeloupe',
+               'gq' => 'Equatorial Guinea',
+               'gr' => 'Greece',
+               'gs' => 'South Georgia and the South Sandwich Islands',
+               'gt' => 'Guatemala',
+               'gu' => 'Guam',
+               'gw' => 'Guinea-Bissau',
+               'gy' => 'Guyana',
+               'hk' => 'Hong Kong',
+               'hm' => 'Heard Island and McDonald Islands',
+               'hn' => 'Honduras',
+               'hr' => 'Croatia (Hrvatska)',
+               'ht' => 'Haiti',
+               'hu' => 'Hungary',
+               'id' => 'Indonesia',
+               'ie' => 'Ireland',
+               'il' => 'Israel',
+               'in' => 'India',
+               'io' => 'British Indian Ocean Territory (including Diego Garcia)',
+               'iq' => 'Iraq',
+               'ir' => 'Iran',
+               'is' => 'Iceland',
+               'it' => 'Italy',
+               'jm' => 'Jamaica',
+               'jo' => 'Jordan',
+               'jp' => 'Japan',
+               'ke' => 'Kenya',
+               'kg' => 'Kyrgyzstan',
+               'kh' => 'Cambodia',
+               'ki' => 'Kiribati',
+               'km' => 'Comoros',
+               'kn' => 'Saint Kitts and Nevis',
+               'kp' => 'North Korea',
+               'kr' => 'South Korea',
+               'kw' => 'Kuwait',
+               'ky' => 'Cayman Islands',
+               'kz' => 'Kazakhstan',
+               'la' => 'Laos',
+               'lb' => 'Lebanon',
+               'lc' => 'Saint Lucia',
+               'li' => 'Liechtenstein',
+               'lk' => 'Sri Lanka',
+               'lr' => 'Liberia',
+               'ls' => 'Lesotho',
+               'lt' => 'Lithuania',
+               'lu' => 'Luxembourg',
+               'lv' => 'Latvia',
+               'ly' => 'Libya',
+               'ma' => 'Morocco',
+               'mc' => 'Monaco',
+               'md' => 'Moldova',
+               'mg' => 'Madagascar',
+               'mh' => 'Marshall Islands',
+               'mk' => 'Former Yugoslav Republic of Macedonia',
+               'ml' => 'Mali',
+               'mm' => 'Myanmar (Burma)',
+               'mn' => 'Mongolia',
+               'mo' => 'Macao (Macau)',
+               'mp' => 'Northern Mariana Islands',
+               'mq' => 'Martinique',
+               'mr' => 'Mauritania',
+               'ms' => 'Montserrat',
+               'mt' => 'Malta',
+               'mu' => 'Mauritius',
+               'mv' => 'Maldives',
+               'mw' => 'Malawi',
+               'mx' => 'Mexico',
+               'my' => 'Malaysia',
+               'mz' => 'Mozambique',
+               'na' => 'Namibia',
+               'nc' => 'New Caledonia',
+               'ne' => 'Niger',
+               'nf' => 'Norfolk Island',
+               'ng' => 'Nigeria',
+               'ni' => 'Nicaragua',
+               'nl' => 'Netherlands',
+               'no' => 'Norway',
+               'np' => 'Nepal',
+               'nr' => 'Nauru',
+               'nu' => 'Niue',
+               'nz' => 'New Zealand',
+               'om' => 'Oman',
+               'pa' => 'Panama',
+               'pe' => 'Peru',
+               'pf' => 'French Polynesia',
+               'pg' => 'Papua New Guinea',
+               'ph' => 'Philippines',
+               'pk' => 'Pakistan',
+               'pl' => 'Poland',
+               'pm' => 'Saint-Pierre and Miquelon',
+               'pn' => 'Pitcairn Islands',
+               'pr' => 'Puerto Rico',
+               'ps' => 'Palestinian Territories (West Bank and Gaza Strip)',
+               'pt' => 'Portugal',
+               'pw' => 'Palau',
+               'py' => 'Paraguay',
+               'qa' => 'Qatar',
+               're' => 'Reunion',
+               'ro' => 'Romania',
+               'ru' => 'Russia',
+               'rw' => 'Rwanda',
+               'sa' => 'Saudi Arabia',
+               'sb' => 'Solomon Islands',
+               'sc' => 'Seychelles',
+               'sd' => 'Sudan',
+               'se' => 'Sweden',
+               'sg' => 'Singapore',
+               'sh' => 'Saint Helena',
+               'si' => 'Slovenia',
+               'sj' => 'Svalbard and Jan Mayen Islands',
+               'sk' => 'Slovakia',
+               'sl' => 'Sierra Leone',
+               'sm' => 'San Marino',
+               'sn' => 'Senegal',
+               'so' => 'Somalia',
+               'sr' => 'Suriname',
+               'st' => 'Sao Tome and Principe',
+               'sv' => 'El Salvador',
+               'sw' => 'Sweden',
+               'sy' => 'Syria',
+               'sz' => 'Swaziland',
+               'tc' => 'Turks and Caicos Islands',
+               'td' => 'Chad (Tchad)',
+               'tf' => 'French Southern Territories',
+               'tg' => 'Togo',
+               'th' => 'Thailand',
+               'tj' => 'Tajikistan',
+               'tk' => 'Tokelau',
+               'tl' => 'Timor-Leste (East Timor)',
+               'tm' => 'Turkmenistan',
+               'tn' => 'Tunisia',
+               'to' => 'Tonga',
+               'tr' => 'Turkey',
+               'tt' => 'Trinidad and Tobago',
+               'tv' => 'Tuvalu',
+               'tw' => 'Taiwan',
+               'tz' => 'Tanzania',
+               'ua' => 'Ukraine',
+               'ug' => 'Uganda',
+               'uk' => 'United Kingdom',
+               'um' => 'United States Minor Outlying Islands',
+               'us' => 'United States',
+               'uy' => 'Uruguay',
+               'uz' => 'Uzbekistan',
+               'va' => 'Vatican City',
+               'vc' => 'Saint Vincent and the Grenadines',
+               've' => 'Venezuela',
+               'vg' => 'British Virgin Islands',
+               'vi' => 'U.S. Virgin Islands',
+               'vn' => 'Vietnam',
+               'vu' => 'Vanuatu',
+               'wf' => 'Wallis and Futuna',
+               'ws' => 'Samoa',
+               'ye' => 'Yemen',
+               'yt' => 'Mayotte',
+               'za' => 'South Africa',
+               'zm' => 'Zambia',
+               'zw' => 'Zimbabwe'
+              );
 }

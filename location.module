@@ -12,7 +12,8 @@ define('LOCATION_USER_DONT_COLLECT', 0);
 define('LOCATION_USER_COLLECT', 1);
 define('LOCATION_USER_CIVICRM_ONLY', 2);
 
-include_once LOCATION_PATH.'/location.inc';
+include_once LOCATION_PATH .'/location.inc';
+include_once LOCATION_PATH .'/location.theme';
 
 /**
  * Implementation of hook_menu.
@@ -21,7 +22,8 @@ include_once LOCATION_PATH.'/location.inc';
 function location_menu($may_cache = FALSE) {
   $items = array();
   if ($may_cache) {
-    $items[] = array('path' => 'search/location', 'title' => t('By location'), 'callback' => 'drupal_get_form', 'callback arguments' => array('location_search_view'), 'access' => user_access('search content'), 'type' => MENU_LOCAL_TASK, 'weight' => 9,);
+    $items[] = array('path' => 'search/location', 'title' => t('By location'), 'callback' => 'location_search_view', 'access' => user_access('search content by location'), 'type' => MENU_LOCAL_TASK, 'weight' => 9);
+    
     $items[] = array('path' => 'admin/settings/location/main', 'title' => t('Main settings'), 'type' => MENU_DEFAULT_LOCAL_TASK,);
     $items[] = array('path' => 'admin/settings/location/maplinking', 'title' => t('Map links'), 'callback' => 'location_map_link_options_page', 'access' => user_access('administer site configuration'), 'type' => MENU_LOCAL_TASK, 'weight' => 1,);
     $items[] = array('path' => 'admin/settings/location/geocoding', 'title' => t('Geocoding options'), 'callback' => 'location_geocoding_options_page', 'access' => user_access('administer site configuration'), 'type' => MENU_LOCAL_TASK, 'weight' => 2,);
@@ -31,7 +33,7 @@ function location_menu($may_cache = FALSE) {
 }
 
 function location_perm() {
-  return array('submit latitude/longitude');
+  return array('search content by location', 'submit latitude/longitude');
 }
 
 /**
@@ -57,101 +59,245 @@ function location_help($section) {
 }
 //TODO: check/fix this: admin/content/configure/types above (still use %? still same url?)
 
-function location_search_get_form($edit = array()) {
-  $edit = array();
-  if($_POST['location']) {
-    $edit = $_POST['location'];
-  } else {
-    $edit = $_GET;
-  }
-  	
-  $location_form = location_form(
-	  array('postal_code', 'country'), 
-	  $edit, 
-	  array('postal_code', 'country'), 
-	  variable_get('location_suppress_country', 0) ? array('country' => variable_get('location_default_country', 'us')) : array(), 
-	  '', 
-	  'location', 
-	  'nearby_postalcodes_bylocation'
-  );
-  
-  $proximity_form = location_proximity_form(array(
-                                              'distance' => (isset($edit['distance']) ? $edit['distance'] : 25), 
-                                              'distance_unit' => (isset($edit['distance_unit']) ? $edit['distance_unit'] : 'mile')),
-                                            variable_get('location_search_distance_unit', 0) ? array('distance_unit' => variable_get('location_search_distance_unit', 0)) : array()
-                                           );
-  
-  $form = array('location' => array_merge($proximity_form, $location_form));
-  $form['location']['#tree'] = TRUE;
-  $form['op'] = array(
-      '#type' => 'submit',
-      '#value' => t('Search'),
-      '#name' => 'op'
-      );
-  if (count($edit)) {
-    // redirect to URL w/ get parameters
-    $get_query = 'postal_code='. $edit['postal_code'];
-    $get_query .= '&country='. $edit['country'];
-    $get_query .= '&distance='. $edit['distance'];
-    $get_query .= '&distance_unit='. $edit['distance_unit']; 
-    $form['#redirect'] = array($_GET['q'], $get_query);
-  }
-  
-  #populate the country options in the country list.
-  $countries = array();
-  $supported_countries = location_get_iso3166_list();
-  $configured_countries = variable_get('location_configured_countries', array('us' => 1));
-  foreach(array_keys($configured_countries) as $key) { 
-	  if($configured_countries[$key] != "0") {
-		  $form['location']['country']['#options'][$key] = $supported_countries[$key];
-	  }
-  }
-  
-  $form['#theme'] = 'location_search';
-  $form['location']['postal_code']['#default_value'] = $edit['postal_code'];
-  $form['location']['distance']['#default_value'] = $edit['distance'];
-  $form['location']['distance_unit']['#default_value'] = $edit['distance_unit'];
-  $form['location']['country']['#default_value'] = $edit['country'];
-  
-  return $form;  
-}
-
-function theme_location_search(&$form) {
-  $row = array();
-  $row[] = '<div class="container-inline">'. drupal_render($form['location']['distance']) . drupal_render($form['location']['distance_unit']) . '</div>';
-  $row[] = drupal_render($form['location']['postal_code']) . drupal_render($form['location']['country']);
-  $output = theme('table', NULL, array($row)) . drupal_render($form['op']);
-  $output .= drupal_render($form);
-  return $output; 
-}
 
 function location_search_view() {
-	//print_r($_POST);
-	//exit;
-  if ($edit = $_POST['edit']) {
-    $edit = $edit['location'];
-    $form = drupal_get_form(array('location_search_get_form', $edit));
-  }
-  elseif (isset($_GET['postal_code']) && isset($_GET['distance']) && isset($_GET['distance_unit']) && isset($_GET['country'])) {
-    $edit = array('postal_code' => $_GET['postal_code'], 'distance' => $_GET['distance'], 'distance_unit' => $_GET['distance_unit'], 'country' => $_GET['country']);
-    //$form = drupal_get_form(array('location_search_get_form', $edit));
-    $form = drupal_get_form('location_search_get_form');
-    $search_results = location_search_get_results($edit);
-  }
-  elseif (isset($_POST['location']['postal_code']) && isset($_POST['location']['distance']) && isset($_POST['location']['distance_unit']) && isset($_POST['location']['country'])) {
-    $edit = array('postal_code' => $_POST['location']['postal_code'], 'distance' => $_POST['location']['distance'], 'distance_unit' => $_POST['location']['distance_unit'], 'country' => $_POST['location']['country']);
-    //$form = drupal_get_form(array('location_search_get_form', $edit));
-    $form = drupal_get_form('location_search_get_form');
-    $search_results = location_search_get_results($edit);
-  }
-  else {
-    $form = drupal_get_form('location_search_get_form');
+  $location_params = array(
+    //'street' => $_GET['street'],
+    //'city' => $_GET['city'],
+    //'province' => $_GET['province'],
+    'postal_code' => $_GET['postal_code'],
+    'country' => $_GET['country'] ? $_GET['country'] : variable_get('location_default_country', 'us')
+  );
+  
+  $proximity_params = array(
+    'distance' => $_GET['distance'],
+    'unit' => $_GET['unit'],
+  );
+  
+  $output .= drupal_get_form('location_search_form', $location_params, $proximity_params);
+  
+  if ($_GET['postal_code'] && $_GET['country'] && $_GET['distance'] && $_GET['country']) {
+    $output .= location_search_results($location_params, $proximity_params);
   }
   
-  print theme('page', $form . (isset($search_results) ? $search_results : ''));
-  exit;
+  return $output;
 }
 
+function location_search_form($location_params = array(), $proximity_params = array()) {
+  $form = array();
+  
+  $location_search_distance_unit_setting = variable_get('location_search_distance_unit', 0);
+  $proximity_suppressed_values = $location_search_distaince_unit_setting ? array('unit' => $location_search_distance_unit_setting) : array();
+  $form['proximity'] = location_proximity_form($proximity_params, $proximity_suppressed_values);
+  
+  $location_suppressed_values = variable_get('location_suppress_country', 0) ? array('country' => variable_get('location_default_country', 'us')) : array();
+  
+  $form['location'] = location_form(
+    array('postal_code', 'country'),
+    $location_params,
+    array('postal_code', 'country'),
+    $location_suppressed_values,
+    '',
+    'nearby_postalcodes_bylocation'
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search')
+  );
+  
+  //$form_exp = var_export($form, TRUE);
+  //drupal_set_message("location_search_form() returning <pre>$form_exp</pre>");
+
+  
+  $form['#submit'] = array_merge(
+    $form['#submit'] ? $form['#submit'] : array(),
+    array('location_search_form_submit' => array())
+  );
+  
+  
+  return $form;
+}
+
+function location_search_form_validate($form_id, &$form_values) {
+  //$form_values_exp = var_export($form_values, TRUE);
+  //drupal_set_message("IN location_search_form_validate(): \$form_id == $form_id, \$form_values == <pre>$form_values_exp</pre>");
+  
+  // TODO: Need to offer ability to configure which fields are included in the search form
+  // TODO: And need to adjust how fields are validated
+  // For now, just require postal code
+  if (!$form_values['postal_code']) {
+    //form_set_error('postal_code', t('You must include a postal code in your search.'));
+  }
+  
+  if (!$form_values['country']) {
+    //form_set_error('country', t('You much include a country in your search.'));
+  }
+}
+
+function location_search_form_submit($form_id, &$form_values) {
+  //$form_values_exp = var_export($form_values, TRUE);
+  //drupal_set_message("IN location_search_form_submit(): \$form_id == $form_id and \$form_values == <pre>$form_values_exp</pre>");
+  
+  /*
+  $location_fields = array('street', 'additional', 'province', 'postal_code', 'country');
+  foreach ($locations_fields as $field_name) {
+    if ($form_values[$field_name]) {
+      if ($query_string) {
+        $query_string .= '&'. $field_name .'='. $form_values[$field_name];
+      }
+      else {
+        $query_string = $field_name .'='. $form_values[$field_name];
+      }
+    }
+  }
+  
+  $query_string = '&distance='. $form_values['distance'] .'&unit='. $unit;
+  */
+  return array('search/location', 'postal_code='. $form_values['postal_code'] .'&country='. $form_values['country'] .'&distance='. $form_values['distance'] .'&unit='. $form_values['unit']);
+}
+
+function location_search_results($location_params, $proximity_params) {
+  
+  // DEBUG: commented code for testing/debugging purposes
+  $start_time = microtime();
+
+  // First things first: find lat/lon for submitted postal_code
+  // TODO: will need to replace be able to get lat/lon of search point for more than just postal_code
+  $latlon = location_latlon_rough($location_params);
+  
+  if (!$latlon['lat'] || !$latlon['lon']) {
+    drupal_set_message(t('No search results; could not determine the location of the submitted postal code.'));
+    return '';
+  }
+  
+  // If the distance parameters did not make sense, return an empty search result set.
+  $distance_float = _location_convert_distance_to_meters($proximity_params['distance'], $proximity_params['unit']);
+  
+  // Find the pairs of lats and lons that define the corners of a square that is $distance X $distance and centered on $latlon
+  $latrange = earth_latitude_range($latlon['lon'], $latlon['lat'], $distance_float);
+  $lonrange = earth_longitude_range($latlon['lon'], $latlon['lat'], $distance_float); 
+  
+  $count_query = 'SELECT COUNT(DISTINCT nid) AS count FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < %f';
+  
+  $query = 'SELECT n.nid, l.*, '. earth_distance_sql($latlon['lon'], $latlon['lat'], 'l') .' as distance FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < %f GROUP BY n.nid ORDER by distance';
+  
+  $query_args = array(
+    $latrange[0], 
+    $latrange[1], 
+    $lonrange[0], 
+    $lonrange[1], 
+    $distance_float
+  );
+  
+  $pager_count_query = 'SELECT COUNT(DISTINCT nid) AS count FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > '. $latrange[0] .' AND l.latitude < '. $latrange[1] .' AND l.longitude > '. $lonrange[0] .' AND l.longitude < '. $lonrange[1] .' AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < '. $distance_float;
+  
+  $pager_query = 'SELECT n.nid, n.vid, l.*, '. earth_distance_sql($latlon['lon'], $latlon['lat'], 'l') .' AS distance FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > '. $latrange[0] .' AND l.latitude < '. $latrange[1] .' AND l.longitude > '. $lonrange[0] .' AND l.longitude < '. $lonrange[1] .' AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < '. $distance_float .' GROUP BY n.nid ORDER by distance';
+  
+  // TODO: need to wrap queries in db_rewrite_sql()
+  // TODO: need to turn this into a pager query
+  
+  $result = db_query(db_rewrite_sql($query), $query_args);
+  
+  $num_rows = db_num_rows($result);
+  
+  //drupal_set_message("ON ACTUAL QUERY, FOUND $num_rows results");
+  
+  //while ($row = db_fetch_object($result)) {
+    //$row_exp = var_export($row, TRUE);
+    //drupal_set_message("<pre>$row_exp</pre>");
+  //}
+  
+  //$result = db_query('SELECT n.nid, n.vid, l.* '. earth_distance_sql($lon, $lat, 'l') .' as distance  FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($lon, $lat) .' < %f ORDER by distance', $latrange[0], $latrange[1], $lonrange[0], $lonrange[1], $distance_float);
+  
+  $count = db_result(db_query(db_rewrite_sql($count_query), $query_args));
+  
+  //drupal_set_message("found $count results for this search");
+  
+  //drupal_set_message("count query that was used: $count_query");
+  
+  //$args_exp = var_export($query_args, TRUE);
+  //drupal_set_message("query args that were used: <pre>$args_exp</pre>");
+  
+  $result = pager_query(db_rewrite_sql($query), 1, 0, $count_query, db_rewrite_sql($query_args));
+  
+  $result_count = db_result(db_query(db_rewrite_sql($count_query), $query_args));
+  
+  if (!$result_count) {
+    $output = theme('box', t('Your search yielded no results.'), '');
+  }
+  else {
+    $results_offset = isset($_GET['from']) ? $_GET['from'] : 0;
+    
+    $page_count = db_num_rows($result);
+  
+    $output = '<p>'. t('Displaying results %a - %b of %count for search on %c', array('%a' => $results_offset + 1, '%b' => $results_offset + $page_count, '%count' => $result_count, '%c' => filter_xss($_GET['postal_code']))) .'</p>';
+    
+    while ($row = db_fetch_object($result)) {
+    
+      $extra = array();
+      unset($location_line);
+      if ($row->postal_code || $row->city) {
+        $location_line = t('Local to ');
+        if ($row->postal_code && $row->city) {
+          if ($row->postal_code) {
+            $location_line .= $row->postal_code;
+          }
+          
+          if ($row->postal_code && $row->city) {
+            $location_line .= ' ('. $row->city;
+            $location_line .= $row->province ? ', '. $row->province : '';
+            $location_line .= ')';
+          }
+          elseif ($row->city) {
+            $location_line .= $row->city . ($row->province ? ', '. $row->province : '');
+          }
+        }
+      }
+      
+      if ($location_line) {
+        $extra['location'] = $location_line;
+      }
+      
+      if (($row->postal_code == $location_params['postal_code'] && $row->country == $location_params['country']) ||
+          ($row->distance < 10)) {
+        $extra['distance'] = t('Result is <strong>also from %postal_code</strong>', array('%postal_code' => $location_params['postal_code']));
+      }
+      else {
+        $adjusted_distance = round($row->distance / (($proximity_params['unit'] == 'km') ? 1000.0 : 1609.347), 1);
+      
+        if ($adjusted_distance != 1) {
+          $distance_unit = ($edit['distance_unit'] == 'km') ? t('km') : t('miles');
+        }
+        else {
+          $distance_unit = ($edit['distance_unit'] == 'km') ? t('km') : t('mile');
+        }
+        $extra['distance'] = t('Approximately %distance %distanceunit from <strong>%location</strong> ', array('%distance' => round($adjusted_distance, 1), '%distanceunit' => $distance_unit, '%location' => $location_params['postal_code']));
+      }
+      
+      $node = node_load($row->nid);
+    
+      $output .= theme(
+        'search_item',
+        array(
+          'link' => url('node/'. $row->nid), 
+          'title' => $node->title, 
+          'type' => $node->type,
+          'user' => db_result(db_query('SELECT name FROM {users} WHERE uid = %d', $node->uid)), 
+          'date' => $node->created,
+          'snippet' => $row->teaser,
+          'extra' => $extra
+        ),
+        'node'
+      );
+                 
+    }
+  }
+  
+  return $output;
+}
+
+/*
 function location_search_get_results($edit = NULL) {
   if ($edit) {
     //$start_time = microtime();
@@ -257,7 +403,7 @@ function location_search_get_results($edit = NULL) {
   
   return $search_results;
 }
-
+*/
 
 /**
  * 
@@ -319,39 +465,6 @@ function location_map_link_options_form() {
   $form['#theme'] = 'location_map_link_options';
   return system_settings_form($form);
 }
-
-
-
-function theme_location_map_link_options(&$form) {
-
-  $header = array(array('align' => 'center', 'data' => '<center>'. t('Country') .'</center>'), array('align' => 'center', 'data' => '<center>'. t('Options') .'</center>'));
-
-  $rows = array();
-  
-  foreach (element_children($form['countries']) as $country_iso) {
-    $row = array();
-    
-    $row[] = array(
-      'data' => drupal_render($form['countries'][$country_iso]['label_'. $country_iso])
-    );
-    
-    $row[] = array(
-      'data' => drupal_render($form['countries'][$country_iso]['location_map_link_'. $country_iso])
-    );
-    
-    $rows[] = $row;
-  }
-  
-  $output = theme('table', $header, $rows);
-  
-  foreach (element_children($form) as $key) {
-    $output .= drupal_render($form[$key]);
-  }
-  $output .= drupal_render($form);
-  
-  return $output;
-}
-
 
 
 function location_field_names() {
@@ -468,44 +581,6 @@ function location_geocoding_options_form() {
   $form['#theme'] = 'location_geocoding_options';
   
   return system_settings_form($form);
-}
-
-function theme_location_geocoding_options(&$form) {
-
-  $header = array(
-    array('align' => 'center', 'data' => '<center>'. t('Country') .'</center>'), 
-    array('align' => 'center', 'data' => '<center>'. t('Options') .'</center>'),
-    array('align' => 'center', 'data' => '<center>'. t('Configure') .'</center>')
-  );
-
-  $rows = array();
-  
-  foreach (element_children($form['countries']) as $country_iso) {
-    $row = array();
-    
-    $row[] = array(
-      'data' => drupal_render($form['countries'][$country_iso]['label_'. $country_iso])
-    );
-    
-    $row[] = array(
-      'data' => drupal_render($form['countries'][$country_iso]['location_geocode_'. $country_iso])
-    );
-    
-    $row[] = array(
-      'data' => drupal_render($form['countries'][$country_iso]['location_geocode_config_link_'. $country_iso])
-    );
-    
-    $rows[] = $row;
-  }
-  
-  $output = theme('table', $header, $rows);
-  
-  foreach (element_children($form) as $key) {
-    $output .= drupal_render($form[$key]);
-  }
-  $output .= drupal_render($form);
-  
-  return $output;
 }
 
 
