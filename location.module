@@ -219,7 +219,7 @@ function location_search_results($location_params, $proximity_params) {
   //$args_exp = var_export($query_args, TRUE);
   //drupal_set_message("query args that were used: <pre>$args_exp</pre>");
   
-  $result = pager_query(db_rewrite_sql($query), 1, 0, $count_query, db_rewrite_sql($query_args));
+  $result = pager_query(db_rewrite_sql($query), 10, 0, $count_query, db_rewrite_sql($query_args));
   
   $result_count = db_result(db_query(db_rewrite_sql($count_query), $query_args));
   
