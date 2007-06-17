@@ -292,6 +292,8 @@ function location_search_results($location_params, $proximity_params) {
       );
                  
     }
+    
+    $output .= theme('pager');
   }
   
   return $output;
