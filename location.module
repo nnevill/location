@@ -10,7 +10,6 @@ define('LOCATION_LATLON_GEOCODED_EXACT', 3);
 
 define('LOCATION_USER_DONT_COLLECT', 0);
 define('LOCATION_USER_COLLECT', 1);
-define('LOCATION_USER_CIVICRM_ONLY', 2);
 
 include_once LOCATION_PATH .'/location.inc';
 include_once LOCATION_PATH .'/location.theme';
@@ -46,13 +45,13 @@ function location_help($section) {
   switch ($section) {
     case 'admin/help#location':
       $output = '<p>'. t('The location module allows you to associate a geographic location with content and users. Users can do proximity searches by postal code.  This is useful for organizing communities that have a geographic presence.') .'</p>';
-      $output .= '<p>'. t('To administer locative information for content, use the content type administration page.  To support most location enabled features, you will need to install the country specific include file.  To support postal code proximity searches for a particular country, you will need a database dump of postal code data for that country.  As of June 2005 only U.S. postal codes are supported.') .'</p>';
+      $output .= '<p>'. t('To administer locative information for content, use the content type administration page.  To support most location enabled features, you will need to install the country specific include file.  To support postal code proximity searches for a particular country, you will need a database dump of postal code data for that country.  As of June 2007 only U.S. and German postal codes are supported.') .'</p>';
       $output .= t('<p>You can</p>
 <ul>
 <li>administer locative information at <a href="@admin-node-configure-types">Administer &gt;&gt; Content management &gt;&gt; Content types</a> to configure a type and see the locative information.</li>
 <li>administer location at <a href="@admin-settings-location">Administer &gt;&gt; Site configuration &gt;&gt; Location</a>.</li>
-<li>use a database dump for a U.S. postal codes table that can be found at <a href="@external-http-trac-civicspacelabs-com-cgi-bin-trac-cgi-file-trunk-database-zipcodes-mysql">zipcode database</a>.</li>
-', array('@admin-node-configure-types' => url('admin/content/types'), '@admin-settings-location' => url('admin/settings/location'), '@external-http-trac-civicspacelabs-com-cgi-bin-trac-cgi-file-trunk-database-zipcodes-mysql' => 'http://trac.civicspacelabs.com/cgi-bin/trac.cgi/file/trunk/database/zipcodes.mysql')) .'</ul>';
+<li>use a database dump for a U.S. and/or German postal codes table that can be found at <a href="@external-http-cvs-drupal-org">zipcode database</a>.</li>
+', array('@admin-node-configure-types' => url('admin/content/types'), '@admin-settings-location' => url('admin/settings/location'), '@external-http-cvs-drupal-org' => 'http://cvs.drupal.org/viewcvs/drupal/contributions/modules/location/database/')) .'</ul>';
       $output .= '<p>'. t('For more information please read the configuration and customization handbook <a href="@location">Location page</a>.', array('@location' => 'http://www.drupal.org/handbook/modules/location/')) .'</p>';
       return $output;
   }
@@ -1446,22 +1445,13 @@ function location_admin_settings() {
       '#description' => t('If you are interested in turning off locations and having a custom theme control their display, you may want to disable the display of locations so your theme can take that function.')
       );
       
-  if (!module_exists('civicrm')) {
-    $form['location_user'] = array(
-        '#type' => 'radios',
-        '#title' => 'User locations',
-        '#default_value' => variable_get('location_user', 0),
-        '#options' => array('Disable', 'Enable'),
-        '#description' => t('Collect user addresses (partial or full) if users wish to submit them for their user accounts.')
-        );
-  }
-  else {
-    $form['location_user'] = array(
-        '#type' => 'item',
-        '#title' => t('User locations'),
-        '#description' => t("You have enabled the CiviCRM module.  This means that CiviCRM will collect user locations for you.  To make sure you will be able to use location module features with these user addresses, you should make sure the CiviCRM 'address' profile is marked as active.  If you installed CiviCRM on a seperate Drupal installation, please consult the documentation in the README.txt file for the Location module.")
-        );
-  }
+  $form['location_user'] = array(
+      '#type' => 'radios',
+      '#title' => 'User locations',
+      '#default_value' => variable_get('location_user', 0),
+      '#options' => array('Disable', 'Enable'),
+      '#description' => t('Collect user addresses (partial or full) if users wish to submit them for their user accounts.')
+      );
   
   $form['location_usegmap'] = array(
       '#type' => 'checkbox',
@@ -1476,7 +1466,7 @@ function location_admin_settings() {
       '#title' => t('Enable all <em>available</em> features for locations from the following countries'),
       '#default_value' => location_get_configured_countries(),
       '#options' => $supported_countries,
-      '#description' => t('Currently, your CivicSpace site is capable of supporting extra features (e.g., postal code proximity searches) for locations from this list of countries.  Please narrow the list down to countries for which you want to support these extra features.  It may be useful for performance to narrow down this list if most the locations in your system are from only a handful of the listed countries.')
+      '#description' => t('Currently, your Drupal site is capable of supporting extra features (e.g., postal code proximity searches) for locations from this list of countries.  Please narrow the list down to countries for which you want to support these extra features.  It may be useful for performance to narrow down this list if most the locations in your system are from only a handful of the listed countries.')
       );
 
   return system_settings_form($form);
@@ -1484,12 +1474,7 @@ function location_admin_settings() {
 
 
 function _location_effective_user_setting() {
-  if (module_exists('civicrm')) {
-    return LOCATION_USER_CIVICRM_ONLY;
-  }
-  else {
-    return variable_get('location_user', LOCATION_USER_DONT_COLLECT);
-  }
+  return variable_get('location_user', LOCATION_USER_DONT_COLLECT);
 }
 
 function location_user($op, &$edit, &$user, $category = NULL) {
@@ -1529,30 +1514,7 @@ function location_user($op, &$edit, &$user, $category = NULL) {
   }
 
   if (($op == 'update' || $op == 'insert') && $category == 'account') {
-    if ($user_setting == LOCATION_USER_CIVICRM_ONLY) {
-      // There was no location form. We need to map CiviCRM fields to location fields.
-      $edit['location'] = array();
-      $edit['location']['street'] = isset($edit['street_address']) ? $edit['street_address'] : '';
-      $edit['location']['additional'] = isset($edit['supplemental_address_1']) ? $edit['supplemental_address_1'] : '';
-      if (isset($edit['supplemental_address_2'])) {
-        $edit['location']['additional'] .= $edit['supplemental_address_2'];
-      }
-      $edit['location']['city'] =  isset($edit['city']) ? $edit['city'] : '';
-      $edit['location']['postal_code'] = isset($edit['postal_code']) ? $edit['postal_code'] : '';
-      db_set_active('civicrm');
-      if (isset($edit['state_province_id'])) {
-        $province_id = db_result(db_query('SELECT abbreviation FROM civicrm_state_province WHERE id = %d', $edit['state_province_id']));
-        $edit['location']['province'] = strtoupper($province_id);
-      }
-      if (isset($edit['country_id'])) {
-        $state_id = db_result(db_query('SELECT iso_code FROM civicrm_country WHERE id = %d', $edit['country_id']));
-        $edit['location']['country'] = strtolower($state_id);
-      }
-      db_set_active();
-    }
-    else {
       $edit['location'] = location_form2api($edit['location']);
-    }
     
     if ($data = location_latlon_exact($edit['location'])) {
       $edit['location']['source'] = LOCATION_LATLON_GEOCODED_EXACT;
