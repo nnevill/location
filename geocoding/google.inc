@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 // Returns lower-case of iso codes for countries supported by Google's geocoder
 function google_geocode_country_list() {
@@ -6,13 +7,23 @@ function google_geocode_country_list() {
   
   if (!count($countries)) {
     $countries = array(
+      'at',
+      'be',
       'br',
       'ca',
+      'ch',
       'cz',
       'de',
+      'es',
       'fr',
       'hu',
+      'ie',
       'in',
+      'it',
+      'li',
+      'lu',
+      'mc',
+      'nl',
       'pl',
       'pt',
       'sg',
@@ -39,6 +50,16 @@ function google_geocode_info() {
 function google_geocode_location($location = array()) {
   
   switch ($location['country']) {
+    case 'li':
+      $location['country'] = 'Liechtenstein';
+      $query = location_address2singleline($location);
+      break;
+      
+    case 'at':
+      $location['country'] = 'Austria';
+      $query = location_address2singleline($location);
+      break;
+      
     case 'uk':
       if ($location['street'] && $location['city']) {
         unset($location['postal_code']);
@@ -53,13 +74,10 @@ function google_geocode_location($location = array()) {
       }
       $query = location_address2singleline($location);
       break;
+      
     default:
       $query = location_address2singleline($location);
       break;
-  }
-  
-  if ($location['country'] == 'uk') {
-
   }
 
   $service_url = 'http://maps.google.com/maps/geo?output=xml&key='. variable_get('location_geocode_google_apikey', '') .'&q=';
