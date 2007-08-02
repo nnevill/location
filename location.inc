@@ -1021,7 +1021,13 @@ function location_latlon_exact($location = array()) {
   $country = trim($location['country']);
   $service = variable_get('location_geocode_'. $country, 'none');
   if (!empty($country) && $service != 'none') {
-    $exact_latlon_function = 'location_geocode_'. $country .'_'. $service;
+    // figure out what the exact function should be
+    if (strpos($service, '|')) {
+      $exact_latlon_function = 'location_geocode_'. $country .'_'. $service;
+    }
+    else {
+      $exact_latlon_function = $service .'_geocode_location';
+    }
     if (function_exists($exact_latlon_function)) {
       return $exact_latlon_function($location);
     }
@@ -1340,6 +1346,19 @@ function location_address2singleline($location = array()) {
   }
   
   return $address;
+}
+
+function location_get_general_geocoder_list() {
+  static $list;
+  
+  if (!count($list)) {
+    $files = file_scan_directory(LOCATION_PATH .'/geocoding', '\.inc$', array('.', '..', 'CVS', '.svn'));
+    foreach ($files as $full_path_name => $fileinfo) {
+      $list[] = $fileinfo->name;
+    }
+  }
+  
+  return $list;
 }
 
 function location_get_iso3166_list() {
