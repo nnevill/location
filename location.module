@@ -402,6 +402,7 @@ function location_geocoding_options_form() {
   $general_geocoders_data = array();
   $general_geocoders_countries = array();
   foreach ($general_geocoders_list as $geocoder_name) {
+    include_once LOCATION_PATH .'/geocoding/'. $geocoder_name .'.inc';
     $info_function = $geocoder_name .'_geocode_info';
     if (function_exists($info_function)) {
       $general_geocoders_data[$geocoder_name] = $info_function();
