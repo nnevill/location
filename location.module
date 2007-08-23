@@ -1061,12 +1061,12 @@ function location_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           }
           
           if ($output = theme('locations', $posted_locations, variable_get('location_suppress_country', 0) ? array('country') : array())) {
-            $node->content['locations']['#value'] .= '<h3>'. t('Location(s)') .'</h3>'. $output;
+            $node->content['locations']['#value'] .= $output;
           }          
         }
         else {
           if ($themed_locations = theme('locations', $node->locations, variable_get('location_suppress_country', 0) ? array('country') : array())) {
-            $node->content['locations']['#value'] .= '<h3>'. t('Location(s)') .'</h3>'. $themed_locations;
+            $node->content['locations']['#value'] .= $themed_locations;
           }
           
           

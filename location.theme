@@ -90,11 +90,11 @@ function theme_location_geocoding_options(&$form) {
 }
 
 function theme_locations($locations = array(), $hide = array()) {
-  $output = '';
+  $output = '<h3>'. t('Location(s)') .'</h3>';
   foreach ($locations as $location) {
     $output .= theme('location', $location, $hide);
   }
-  
+
   return $output;
 }
 
