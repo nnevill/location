@@ -182,7 +182,7 @@ function location_search_results($location_params, $proximity_params) {
   $latrange = earth_latitude_range($latlon['lon'], $latlon['lat'], $distance_float);
   $lonrange = earth_longitude_range($latlon['lon'], $latlon['lat'], $distance_float); 
   
-  $count_query = 'SELECT COUNT(DISTINCT nid) AS count FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < %f';
+  $count_query = 'SELECT COUNT(nid) AS count FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < %f';
   
   $query = 'SELECT n.nid, l.*, '. earth_distance_sql($latlon['lon'], $latlon['lat'], 'l') .' as distance FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > %f AND l.latitude < %f AND l.longitude > %f AND l.longitude < %f AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < %f GROUP BY n.nid ORDER by distance';
   
@@ -198,7 +198,7 @@ function location_search_results($location_params, $proximity_params) {
   
   $pager_query = 'SELECT n.nid, n.vid, l.*, '. earth_distance_sql($latlon['lon'], $latlon['lat'], 'l') .' AS distance FROM {node} n INNER JOIN {location} l ON n.vid = l.eid WHERE l.type =\'node\' AND l.latitude > '. $latrange[0] .' AND l.latitude < '. $latrange[1] .' AND l.longitude > '. $lonrange[0] .' AND l.longitude < '. $lonrange[1] .' AND '. earth_distance_sql($latlon['lon'], $latlon['lat']) .' < '. $distance_float .' GROUP BY n.nid ORDER by distance';
   
-  $result = pager_query(db_rewrite_sql($query), 10, 0, $count_query, db_rewrite_sql($query_args));
+  $result = pager_query(db_rewrite_sql($query), 10, 0, db_rewrite_sql($count_query), $query_args);
   
   $result_count = db_result(db_query(db_rewrite_sql($count_query), $query_args));
   
