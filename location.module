@@ -123,7 +123,6 @@ function location_elements() {
       '#attributes' => array('class' => 'location'),
       // Element level validation.
       '#validate' => array('location_element_validate' => array()),
-      //'#theme' => 'location_element',
     ),
     'location_settings' => array(
       '#input' => FALSE,
@@ -133,6 +132,15 @@ function location_elements() {
       '#tree' => TRUE,
     ),
   );
+}
+
+/**
+ * Theme function to fixup location elements.
+ */
+function theme_location_element($element) {
+  // Prevent spurious "Array" from appearing.
+  unset($element['#value']);
+  return theme('fieldset', $element);
 }
 
 /**
@@ -180,8 +188,6 @@ function _location_expand_location($element) {
   drupal_add_css(drupal_get_path('module', 'location') .'/location.css');
   $value = is_array($element['#value']) ? $element['#value'] : array();
   $element['#tree'] = TRUE;
-  // @@@ This will make it a simple fieldset instead of calling the theme function...
-  $element['#type'] = 'fieldset';
 
   if (!isset($element['#title'])) {
     $element['#title'] = t('Location');
