@@ -1702,3 +1702,97 @@ function location_token_list($type = 'all') {
     return $tokens;
   }
 }
+
+/**
+ * Theme preprocess function for a location.
+ */
+function template_preprocess_location(&$variables) {
+  $location = $variables['location'];
+  foreach($variables['hide'] as $key) {
+    unset($location[$key]);
+  }
+
+  // Location name.
+  $variables['name'] = '';
+  if (!empty($location['name'])) {
+    $variables['name'] = theme('placeholder', $location['name']);
+  }
+
+  // Theme latitude and longitude as d/m/s.
+  $variables['latitude'] = '';
+  $variables['latitude_dms'] = '';
+  if (!empty($location['latitude'])) {
+    $variables['latitude'] = check_plain($location['latitude']);
+    $variables['latitude_dms'] = theme('location_latitude_dms', $location['latitude']);
+  }
+
+  $variables['longitude'] = '';
+  $variables['longitude_dms'] = '';
+  if (!empty($location['longitude'])) {
+    $variables['longitude'] = check_plain($location['longitude']);
+    $variables['longitude_dms'] = theme('location_longitude_dms', $location['longitude']);
+  }
+
+  $variables['map_link'] = '';
+  if (!in_array('map_link', $variables['hide'])) {
+    $variables['map_link'] = location_map_link($variables['location']);
+  }
+
+  foreach (array('street', 'additional', 'city', 'province', 'country', 'postal_code', 'province_name', 'country_name') as $key) {
+    $variables[$key] = '';
+    if (!empty($location[$key])) {
+      $variables[$key] = check_plain($location[$key]);
+    }
+  }
+
+  // Add a country-specific template suggestion.
+  if (!empty($location['country']) && location_standardize_country_code($location['country'])) {
+    // $location['country'] is normalized in the previous line.
+    $variables['template_files'][] = 'location-'. $location['country'];
+  }
+}
+
+/**
+ * Drupal 6 style theming helper.
+ */
+function _location_render($file, $variables) {
+  foreach ($variables['template_files'] as $temp) {
+    if (file_exists(drupal_get_path('module', 'location') ."/$temp.tpl.php")) {
+      $file = $temp;
+      break;
+    }
+  }
+  extract($variables, EXTR_SKIP);  // Extract the variables to a local namespace
+  ob_start();                      // Start output buffering
+  include drupal_get_path('module', 'location') ."/$file.tpl.php"; // Include the file
+  $contents = ob_get_contents();   // Get the contents of the buffer
+  ob_end_clean();                  // End buffering and discard
+  return $contents;                // Return the contents
+}
+
+/**
+ * Generates HTML for the passed location.
+ *
+ * @param $location
+ *   Array. A single location with the following fields:
+ *      'street'       => A string representing the street location
+ *      'additional'   => A string for any additional portion of the street location
+ *      'city'         => A string for the city name
+ *      'province'     => The standard postal abbreviation for the province
+ *      'country'      => The two-letter ISO code for the country of the location (REQUIRED)
+ *      'postal_code'  => The international postal code for the location
+ * @param $hide
+ *   Array. The values are the location fields to suppress in the themed display.
+ * @ingroup themeable
+ */
+function theme_location($location = array(), $hide = array()) {
+  // This lets us use the same logic in Drupal 5 and 6.
+  $variables = array('location' => $location, 'hide' => $hide);
+  template_preprocess_location($variables);
+
+  // If you want to override the templates, you can override theme_location
+  // in your template.php and uncomment the next line (in your overridden version.)
+  //return _phptemplate_callback('location', $variables);
+
+  return _location_render('location', $variables);
+}
