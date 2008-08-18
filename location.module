@@ -1756,10 +1756,12 @@ function template_preprocess_location(&$variables) {
  * Drupal 6 style theming helper.
  */
 function _location_render($file, $variables) {
-  foreach ($variables['template_files'] as $temp) {
-    if (file_exists(drupal_get_path('module', 'location') ."/$temp.tpl.php")) {
-      $file = $temp;
-      break;
+  if (!empty($variables['template_files'])) {
+    foreach ($variables['template_files'] as $temp) {
+      if (file_exists(drupal_get_path('module', 'location') ."/$temp.tpl.php")) {
+        $file = $temp;
+        break;
+      }
     }
   }
   extract($variables, EXTR_SKIP);  // Extract the variables to a local namespace
