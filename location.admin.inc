@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Administration related forms.
+ */
+
+/**
  * Admin settings form.
  *
  * @ingroup form
@@ -35,24 +40,6 @@ function _location_admin_settings() {
     '#default_value'  => variable_get('location_default_country', 'us'),
     '#options'        => $iso_list_sorted,
     '#description'    => t('This will be the country that is automatically selected when a location form is served for a new location.')
-  );
-  $form['location_suppress_country'] = array(
-    '#type'           => 'checkbox',
-    '#title'          => t('Hide country selection'),
-    '#return_value'   => 1,
-    '#default_value'  => variable_get('location_suppress_country', 0),
-    '#description'    => t("If your site is specific to a country and you would like to hide the country field on search forms and content creation forms, check this box.  Doing so will automatically assume the country to be the country you have chosen for the 'default country selection' above.")
-  );
-  $form['location_search_distance_unit'] = array(
-    '#type'           => 'radios',
-    '#title'          => t('Distance unit for location-based searches'),
-    '#default_value'  => variable_get('location_search_distance_unit', 0),
-    '#options'        => array(
-      0       => t('Allow both miles and kilometers.'),
-      'mile'  => t('Only allow a search-radius to be specified in miles'),
-      'km'    => t('Only allow a search-radius to be specified in kilometers')
-    ),
-    '#description'    => t('Select the distance unit that applies when users search for content by a specified location and search-radius.')
   );
   $form['location_display_location'] = array(
     '#type'           => 'radios',
