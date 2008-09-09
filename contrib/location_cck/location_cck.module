@@ -139,13 +139,12 @@ function location_cck_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'update':
       $cid = 'cck:'. $field['field_name'] .':'. $node->vid; //@@@
 
-      db_query("DELETE FROM {location_instance} WHERE genid = '%s'", $cid);
       foreach ($items as $offset => $item) {
-        $lid = location_save($item);
-        if ($lid) {
-          db_query("INSERT INTO {location_instance} (genid, lid) VALUES ('%s', %d)", $cid, $lid);
-        }
-        $items[$offset]['lid'] = $lid; // @@@?
+        location_save($items[$offset]);
+      }
+      db_query("DELETE FROM {location_instance} WHERE genid = '%s'", $cid);
+      foreach ($items as $location) {
+        db_query("INSERT INTO {location_instance} (genid, lid) VALUES ('%s', %d)", $cid, $lid);
       }
       break;
   }
@@ -275,7 +274,7 @@ function location_cck_widget($op, &$node, $field, &$items) {
     //    }
       }
       break;
-    
+
     case 'prepare form values':
       // Load locations for use in edit form.
       foreach ($items as $k => $item) {
