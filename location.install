@@ -438,7 +438,7 @@ function location_update_5301() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      db_query("
+      $ret[] = update_sql("
       CREATE TABLE {location_instance} (
         nid int UNSIGNED DEFAULT NULL,
         vid int UNSIGNED DEFAULT NULL,
