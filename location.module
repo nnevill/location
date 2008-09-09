@@ -905,7 +905,7 @@ function _location_node_type_form_alter($form_id, &$form) {
       'simple' => t('GeoRSS-Simple'),
       'gml' => t('GeoRSS GML'),
     ),
-    '#default_value' => variable_get('location_rss_'. $type, 'w3c'), // @@@ Historical default.
+    '#default_value' => variable_get('location_rss_'. $type, 'simple'), // #301540
   );
 
   $defaults = variable_get("location_display_$type", array(
