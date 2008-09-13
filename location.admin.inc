@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Administration related forms.
+ * Admin forms for Location.
  */
 
 /**

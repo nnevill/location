@@ -218,7 +218,7 @@ function _location_expand_location($element) {
       if ($location_settings[$field] != 0) {
         $element[$field] = location_invoke_locationapi($dv[$field], 'field_expand', $field, $location_settings[$field], $dv);
       }
-      
+
       // Only include 'Street Additional' if 'Street' is 'allowed' or 'required'
       if ($field == 'street' && $location_settings[$field]) {
         $element['additional'] = location_invoke_locationapi($dv['additional'], 'field_expand', 'additional', 1, $dv);
@@ -438,7 +438,7 @@ function _location_expand_location_settings($element) {
       3 => t('Force Default'),
     ),
   );
-  
+
   // 'Street Additional' field should depend on 'Street' setting.
   // It should never be required and should only display when the street field is 'allowed' or 'required'
   unset($element['additional']);
@@ -1000,7 +1000,7 @@ function _location_node_form_alter($form_id, &$form) {
       '#type' => 'fieldset',
       '#title' => format_plural($location_form_count, 'Location', 'Locations'),
       '#tree' => TRUE,
-      '#attributes' => array_merge(is_array($form['locations']['#attributes']) ? $form['locations']['#attributes'] : array(), array('class' => 'locations')),
+      '#attributes' => array_merge((isset($form['locations']['#attributes']) && is_array($form['locations']['#attributes'])) ? $form['locations']['#attributes'] : array(), array('class' => 'locations')),
       '#weight' => variable_get('location_weight_'. $form['type']['#value'], 9),
       '#collapsible' => variable_get('location_collapsible_'. $form['type']['#value'], 0) == 0 ? FALSE : TRUE,
       '#collapsed' => variable_get('location_collapsed_'. $form['type']['#value'], 0) == 0 ? FALSE : TRUE,
@@ -1038,6 +1038,9 @@ function _location_node_form_alter($form_id, &$form) {
   }
 }
 
+/**
+ * Alter the user_admin_settings form.
+ */
 function _location_user_settings_form_alter($form_id, &$form) {
   $form['user_locations'] = array(
     '#type' => 'fieldset',
@@ -1427,6 +1430,7 @@ function location_user($op, &$edit, &$account, $category = NULL) {
  *   Javascript array. List of states
  */
 function _location_autocomplete($country, $string = '') {
+  $counter = 0;
   $string   = strtolower($string);
   $string   = '/^'. $string .'/';
   $matches  = array();
