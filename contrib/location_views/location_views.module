@@ -144,7 +144,7 @@ function location_views_tables() {
         'operator' => 'location_handler_operator_eq',
         'handler' => 'location_handler_filter_eq',
         // FIXME!
-        'list' => location_province_select_options(), // @@@ Dunno how sane this is....
+        'list' => location_views_province_select_options(), // @@@ Dunno how sane this is....
         'list-type' => 'select',
       ),
       'province' => array(
@@ -965,4 +965,37 @@ function location_views_views_pre_view($view, $items) {
       $view->filter[$key]['value'] = location_views_map_input_form();
     }
   }
+}
+
+function location_views_province_select_options($country = NULL) {
+  $options = array();
+  $obj = new stdClass();
+  $obj->option = array('' => t('NOT LISTED'));
+  $options[] = $obj;
+
+  if (isset($country)) {
+    $countries = array($country => location_country_name($country));
+  }
+  else {
+    $countries = array();
+    $result = db_query('SELECT DISTINCT country FROM {location}');
+    while ($row = db_fetch_object($result)) {
+      $countries[$row->country] = location_country_name($row->country);
+    }
+  }
+  foreach ($countries as $cc => $name) {
+    $provinces = location_get_provinces($cc);
+    // If we're listing multiple countries, do a divider.
+    if (!$name === TRUE) {
+      $obj = new stdClass();
+      $obj->option = array('' => '[ ----- '. strtoupper($country_name) .' ----- ]');
+      $options[] = $obj;
+    }
+    foreach ($provinces as $province_code => $province_name) {
+      $obj = new stdClass();
+      $obj->option = array("$cc-$province_code" => $province_name);
+      $options[] = $obj;
+    }
+  }
+  return $options;
 }
