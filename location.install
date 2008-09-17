@@ -636,3 +636,5 @@ function location_update_5301() {
   return $ret;
 }
  */
+
+// @@@ variable_del('location_configured_countries');

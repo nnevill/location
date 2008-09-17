@@ -1218,24 +1218,6 @@ function location_load_location($lid) {
   return $location;
 }
 
-/**
- * Returns an array of countries whose locations will be allowed entry
- * into the site's location system.  The array returned is an associative
- * array where the keys are the ISO codes (see location.inc) and the values
- * are the shortened English names.
- */
-function location_get_configured_countries() {
-  $configured_countries = variable_get('location_configured_countries', array('us' => 1));
-  $configured_countries = is_array($configured_countries) ? $configured_countries : array('us' => 1);
-  $return = array();
-  foreach ($configured_countries as $country => $enabled) {
-    if ($enabled) {
-      $return[] = $country;
-    }
-  }
-  return $return;
-}
-
 // @@@ There are significant changes in the megapatch.
 /**
  * Implementation of hook_user().
