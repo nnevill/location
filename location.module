@@ -714,7 +714,7 @@ function _location_node_type_form_alter($form_id, &$form) {
   $form['#submit'] = array_merge(array('_location_node_type_save_submit' => array()), $form['#submit']);
 
   $form['location'] = array_merge(
-    is_array($form['location']) ? $form['location'] : array(),
+    (isset($form['location']) && is_array($form['location'])) ? $form['location'] : array(),
     array(
       '#type'         => 'fieldset',
       '#title'        => t('Locative information'),
