@@ -238,6 +238,11 @@ function location_geocoding_options_form() {
   }
   $form = system_settings_form($form);
   $form['#theme'] = 'location_geocoding_options';
+  if (!is_array($form['#submit'])) {
+    $form['#submit'] = array('system_settings_form_submit' => array());
+  }
+  array_unshift($form['#submit'], array('location_geocoding_options_form_submit' => array()));
+
   return $form;
 }
 

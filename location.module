@@ -921,14 +921,6 @@ function _location_user_settings_form_alter($form_id, &$form) {
  */
 function location_form_alter($form_id, &$form) {
   switch ($form_id) {
-    case 'location_geocoding_options_form':
-      // Fix the submit handler.
-      if (!is_array($form['#submit'])) {
-        $form['#submit'] = array('system_settings_form_submit' => array());
-      }
-      array_unshift($form['#submit'], array('location_geocoding_options_form_submit' => array()));
-      break;
-
     case 'node_type_form':
       // Add the options to the Node Type form
       _location_node_type_form_alter($form_id, $form);
