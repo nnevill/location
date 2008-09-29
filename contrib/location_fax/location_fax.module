@@ -65,7 +65,7 @@ function location_fax_views_tables() {
       ),
     ),
     'fields' => array(
-      'phone' => array(
+      'fax' => array(
         'name' => t('Location: Fax'),
         'sortable' => TRUE,
       ),
