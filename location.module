@@ -140,7 +140,6 @@ function location_elements() {
 function theme_location_element($element) {
   // Prevent spurious "Array" from appearing.
   unset($element['#value']);
-  $element['#collapsible'] = FALSE;
   return theme('fieldset', $element);
 }
 
@@ -867,6 +866,10 @@ function _location_node_form_alter($form_id, &$form) {
 
     if ($location_form_count == 1) {
       $form['locations'][0]['#title'] = t('Location');
+      // If the user had configured the form for a single location, inherit
+      // the collapsible / collapsed settings.
+      $form['locations'][0]['#collapsible'] = $form['locations']['#collapsible'];
+      $form['locations'][0]['#collapsed'] = $form['locations']['#collapsed'];
     }
   }
 }
