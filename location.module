@@ -1709,9 +1709,19 @@ function _location_render($file, $variables) {
   // Run the built-in template_preprocess function.
   $func = 'template_preprocess_'. $file;
   $func($variables);
+  $filepath = drupal_get_path('module', 'location');
+  if (file_exists(path_to_theme() ."/$file.tpl.php")) {
+    $filepath = path_to_theme();
+  }
   if (!empty($variables['template_files'])) {
     foreach ($variables['template_files'] as $temp) {
+      if (file_exists(path_to_theme() ."/$temp.tpl.php")) {
+        $filepath = path_to_theme();
+        $file = $temp;
+        break;
+      }
       if (file_exists(drupal_get_path('module', 'location') ."/$temp.tpl.php")) {
+        $filepath = drupal_get_path('module', 'location');
         $file = $temp;
         break;
       }
@@ -1719,7 +1729,7 @@ function _location_render($file, $variables) {
   }
   extract($variables, EXTR_SKIP);  // Extract the variables to a local namespace
   ob_start();                      // Start output buffering
-  include drupal_get_path('module', 'location') ."/$file.tpl.php"; // Include the file
+  include "$filepath/$file.tpl.php"; // Include the file
   $contents = ob_get_contents();   // Get the contents of the buffer
   ob_end_clean();                  // End buffering and discard
   return $contents;                // Return the contents
