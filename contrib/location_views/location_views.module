@@ -143,9 +143,18 @@ function location_views_tables() {
         'name' => t('Province Selector'),
         'operator' => 'location_handler_operator_eq',
         'handler' => 'location_handler_filter_eq',
-        // FIXME!
-        'list' => location_views_province_select_options(), // @@@ Dunno how sane this is....
-        'list-type' => 'select',
+        'value' => array(
+          '#type' => 'textfield',
+          // Used so we can find ourselves during alter.
+          '#location_views_province_field' => TRUE,
+          '#autocomplete_path' => 'location/autocomplete/'. variable_get('location_default_country', 'us'),
+          '#size' => 64,
+          '#maxlength' => 64,
+          // Used by province autocompletion js.
+          '#attributes' => array('class' => 'location_views_auto_province'),
+          // Used to ensure the JS is loaded.
+          '#theme' => 'location_views_province_textfield',
+        ),
       ),
       'province' => array(
         'field' => 'province',
@@ -164,8 +173,12 @@ function location_views_tables() {
         'name' => t('Country'),
         'operator' => 'location_handler_operator_eq',
         'handler' => 'location_handler_filter_eq',
-        'list' => location_get_iso3166_list(),
-        'list-type' => 'select',
+        'value' => array(
+          '#type'           => 'select',
+          '#options'        => array_merge(array('' => t('Please select'), 'xx' => 'NOT LISTED'), location_get_iso3166_list()),
+          // Used by province autocompletion js.
+          '#attributes'     => array('class' => 'location_views_auto_country'),
+        ),
       ),
       'latitude' => array(
         'field' => 'latitude',
@@ -626,6 +639,11 @@ function location_views_arguments() {
   return $arguments;
 }
 
+function theme_location_views_province_textfield($element) {
+  drupal_add_js(drupal_get_path('module', 'location_views') .'/location_views_autocomplete.js');
+  return theme('textfield', $element);
+}
+
 function location_views_handler_any($op, &$query, $argtype, $arg = '', $type = 'node', $col) {
   switch ($op) {
     case 'summary':
@@ -821,23 +839,30 @@ function location_handler_filter_eq($op, $filter, $filterinfo, &$query) {
     if (empty($filter['operator'])) {
       return;
     }
-  }
 
-dpm('HUH?');
-dpm($op);
-dpm($filter);
-dpm($filterinfo);
-dpm($query);
+    $searchvalue = $filter['value'];
+    switch ($filterinfo['field']) {
+      case 'province':
+        //@@@ There's gotta be a better way to grab the country...
+        $country = substr($filterinfo['value']['#autocomplete_path'], -2);
+        $provinces = location_get_provinces($country);
+        $p = strtoupper($filter['value']);
+        foreach ($provinces as $k => $v) {
+          if ($p == strtoupper($k) || $p == strtoupper($v)) {
+            $searchvalue = $k;
+            break;
+          }
+        }
+        break;
 
-  switch ($filterinfo['field']) {
-    case 'province':
-dpm($filter['value']);
-      $filter['value'] = location_form2api(array('province' => $filter['value']));
-      $filter['value'] = $filter['value']['province'];
-      break;
+      case 'country':
+        // No extra processing needed.
+        break;
+    }
+
+    $query->ensure_table($filterinfo['table']);
+    $query->add_where("%s.%s %s '%s'", $filterinfo['table'], $filterinfo['field'], $filter['operator'], $searchvalue);
   }
-  $query->ensure_table($filterinfo[table]);
-  $query->add_where("$filterinfo[table].$filterinfo[field] $filter[operator] '$filter[value]'");
 }
 
 /**
@@ -967,35 +992,31 @@ function location_views_views_pre_view($view, $items) {
   }
 }
 
-function location_views_province_select_options($country = NULL) {
-  $options = array();
-  $obj = new stdClass();
-  $obj->option = array('' => t('NOT LISTED'));
-  $options[] = $obj;
-
-  if (isset($country)) {
-    $countries = array($country => location_country_name($country));
-  }
-  else {
-    $countries = array();
-    $result = db_query('SELECT DISTINCT country FROM {location}');
-    while ($row = db_fetch_object($result)) {
-      $countries[$row->country] = location_country_name($row->country);
+/**
+ * Implementation of hook_form_alter().
+ */
+function location_views_form_alter($form_id, &$form) {
+  // Fix the autocomplete path for the province field.
+  // @@@ Unfortunately, views seems to cache the form contents.
+  if ($form_id == 'views_filters') {
+    $country = FALSE;
+    foreach ($form['view']['#value']->filter as $k => $filter) {
+      if ($filter['field'] == 'location.country') {
+        $fv = views_get_filter_values();
+        $country = $fv[$k]['filter'];
+        if (!location_standardize_country_code($country)) {
+          // Invalid country, fall back to default.
+          $country = variable_get('location_default_country', 'us');
+        }
+        break;
+      }
+    }
+    if ($country) {
+      foreach ($form as $k => $field) {
+        if (is_array($field) && isset($field['#location_views_province_field'])) {
+          $form[$k]['#autocomplete_path'] = 'location/autocomplete/'. $country;
+        }
+      }
     }
   }
-  foreach ($countries as $cc => $name) {
-    $provinces = location_get_provinces($cc);
-    // If we're listing multiple countries, do a divider.
-    if (!$name === TRUE) {
-      $obj = new stdClass();
-      $obj->option = array('' => '[ ----- '. strtoupper($country_name) .' ----- ]');
-      $options[] = $obj;
-    }
-    foreach ($provinces as $province_code => $province_name) {
-      $obj = new stdClass();
-      $obj->option = array("$cc-$province_code" => $province_name);
-      $options[] = $obj;
-    }
-  }
-  return $options;
 }
