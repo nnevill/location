@@ -125,7 +125,8 @@ function _location_search($op = 'search', $keys = null) {
           $add = ', '. earth_distance_sql($lon, $lat, 'l') .' AS distance';
         }
         $query = "SELECT l.lid$add FROM {location} l WHERE $conditions1";
-        $result = db_query($query, $arguments1);
+        $countquery = "SELECT COUNT(*) FROM {location} l WHERE $conditions1";
+        $result = pager_query($query, 10, 0, $countquery, $arguments1);
         while ($row = db_fetch_object($result)) {
           $lids[] = $row->lid;
         }
