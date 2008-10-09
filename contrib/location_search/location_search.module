@@ -367,10 +367,10 @@ function template_preprocess_search_results_location(&$variables) {
 
 function theme_search_results_location($results, $type) {
   $variables = array('results' => $results, 'type' => $type);
-  return _location_render('search_results_location', $variables);
+  return _location_render('search_results_location', $variables, 'location_search');
 }
 
 function theme_search_result_location($result, $type) {
   $variables = array('result' => $result, 'type' => $type);
-  return _location_render('search_result_location', $variables);
+  return _location_render('search_result_location', $variables, 'location_search');
 }

@@ -1750,7 +1750,7 @@ function template_preprocess_locations(&$variables) {
 /**
  * Drupal 6 style theming helper.
  */
-function _location_render($file, $variables) {
+function _location_render($file, $variables, $module = 'location') {
   // Run the built-in template_preprocess function.
   $func = 'template_preprocess_'. $file;
   $func($variables);
@@ -1765,8 +1765,8 @@ function _location_render($file, $variables) {
         $file = $temp;
         break;
       }
-      if (file_exists(drupal_get_path('module', 'location') ."/$temp.tpl.php")) {
-        $filepath = drupal_get_path('module', 'location');
+      if (file_exists(drupal_get_path('module', $module) ."/$temp.tpl.php")) {
+        $filepath = drupal_get_path('module', $module);
         $file = $temp;
         break;
       }
