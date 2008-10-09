@@ -2,4 +2,4 @@
 name = Location Search
 package = Location
 description = Advanced search page for locations.
-dependencies = location
+dependencies = search location
