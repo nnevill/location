@@ -4,7 +4,6 @@
 /**
  * @file
  * Views-enables the location module.
- *
  */
 
 /**
@@ -155,6 +154,7 @@ function location_views_tables() {
           // Used to ensure the JS is loaded.
           '#theme' => 'location_views_province_textfield',
         ),
+        'cacheable' => 'no',
       ),
       'province' => array(
         'field' => 'province',
@@ -199,17 +199,22 @@ function location_views_tables() {
         'help' => t('Select the postal code and the distance units to be used for the proximity filter.'),
         'cacheable' => 'no',
       ),
-      'proximity_map' => array(
-        'field' => 'distance',
-        'name' => t('Proximity Map'),
-        'operator' => location_views_proximity_operators(),
-        'handler' => 'location_views_filter_handler_proximity',
-        'value' => location_views_map_input_form(),
-        'help' => t('Map the central point and the distance units to be used for the proximity filter.'),
-        'cacheable' => 'no',
-      ),
     ),
   );
+
+  if (module_exists('gmap')) {
+    $tables['location']['filters']['proximity_map'] = array(
+      'field' => 'distance',
+      'name' => t('Proximity Map'),
+      'operator' => location_views_proximity_operators(),
+      'handler' => 'location_views_filter_handler_proximity',
+      'value' => array(
+        '#type' => 'location_views_map',
+      ),
+      'help' => t('Map the central point and the distance units to be used for the proximity filter.'),
+      'cacheable' => 'no',
+    );
+  }
 
   // location <-> location_instance <-> node
   $tables['location_instance_node'] = array(
@@ -923,18 +928,16 @@ function location_views_filter_handler_user_proximity($op, $filter, $filterinfo,
 }
 
 function location_views_filter_handler_proximity($op, $filter, $filterinfo, &$query, $table = 'location') {
-
   $unit     = 'miles';
   $distance = $filter['operator'];
 
-  if ($filterinfo['value']['latitude']) {
-    $lat = $_GET['latitude'];
-    $lon = $_GET['longitude'];
-
+  if (isset($filter['value']['latitude'])) {
+    $lat = $filter['value']['latitude'];
+    $lon = $filter['value']['longitude'];
   }
   else {
-
     $zip      = $filter['value'];
+    // @@@ This needs to factor in country.
     $result   = db_query("SELECT * FROM {zipcodes} WHERE zip = '%s'", $zip);
     while ($arr = db_fetch_array($result)) {
       $lat = $arr['latitude'];
@@ -952,44 +955,6 @@ function location_views_filter_handler_proximity($op, $filter, $filterinfo, &$qu
   $query->add_orderby(NULL, "((". earth_distance_sql($lon, $lat) .") / $divisor)", 'ASC', 'distance');
   $query->add_where("$table.longitude IS NOT NULL");
   $query->add_where("$table.latitude > %f AND $table.latitude < %f AND $table.longitude > %f AND $table.longitude < %f", $latrange[0], $latrange[1], $lonrange[0], $lonrange[1]);
-}
-
-/**
- * Input map.
- */
-function location_views_map_input_form() {
-  if (!module_exists('gmap')) {
-    return;
-  }
-  global $user;
-
-  $account = $user;
-  $result = db_query('SELECT l.latitude, l.longitude FROM {location} l INNER JOIN {location_instance} i ON l.lid = i.lid WHERE i.uid = %d', $user->uid);
-  if ($gmap_user = db_fetch_array($result)) {
-    $account->latitude  = $gmap_user['latitude'];
-    $account->longitude = $gmap_user['longitude'];
-  }
-
-  $prefilled_values['latitude'] = $_GET['latitude'] ? $_GET['latitude'] : $account->latitude;
-  $prefilled_values['longitude'] = $_GET['longitude'] ? $_GET['longitude'] : $account->longitude;
-  return location_latlon_form($description = 'Click on the map to mark the center point for your search, then submit the values.', $prefilled_values);
-}
-
-/**
- *  Implementation of views_pre_view
- */
-function location_views_views_pre_view($view, $items) {
-  // the map form gets cached in the views table cache
-  // get location_views_map_input_form() to regenerate itself by clearing the cache
-  // and recalling the form
-  foreach ($view->filter as $key => $filter) {
-    if ($filter['field'] == 'location.proximity_map' || $filter['field'] == 'user_location.proximity_map') {
-      // clear the cache so we can re-use our forms
-      // this is a tradeoff because it drops the cache for every other views table just to perform this
-      cache_clear_all('views_tables', 'cache_views', true);
-      $view->filter[$key]['value'] = location_views_map_input_form();
-    }
-  }
 }
 
 /**
@@ -1019,4 +984,61 @@ function location_views_form_alter($form_id, &$form) {
       }
     }
   }
+}
+
+/**
+ * Implementation of hook_elements().
+ */
+function location_views_elements() {
+  return array(
+    'location_views_map' => array(
+      '#input' => TRUE,
+      '#tree' => TRUE,
+      '#process' => array('_location_views_expand_map' => array()),
+    ),
+  );
+}
+
+function _location_views_expand_map($element) {
+
+  // Views 1.x has serious issues with persisting #tree.
+  // Repair stuff that views screwed up.
+  if (isset($element['#default_value']) && is_string($element['#default_value'])) {
+    $val = explode(',', $element['#default_value']);
+    $element['#default_value'] = array(
+      'latitude' => $val[0],
+      'longitude' => $val[1],
+    );
+  }
+  if (isset($element['#value']) && is_string($element['#value'])) {
+    $val = explode(',', $element['#value']);
+    $element['#value'] = array(
+      'latitude' => $val[0],
+      'longitude' => $val[1],
+    );
+  }
+
+  // @@@ I'm undecided as to whether this is a good idea to have.
+  // It seems to break the principle of least surprise...
+  if (!isset($element['#default_value']['latitude']) || empty($element['#default_value']['latitude'])) {
+    // Default value not set. Attempt to come up with a default value based on the user's location.
+    global $user;
+    $result = db_query('SELECT l.latitude, l.longitude FROM {location} l INNER JOIN {location_instance} i ON l.lid = i.lid WHERE i.uid = %d', $user->uid);
+    if ($row = db_fetch_array($result)) {
+      $element['#default_value'] = $row;
+    }
+  }
+
+  if (!isset($element['#default_value']['latitude']) || empty($element['#default_value']['latitude'])) {
+    // Default value not set, tidy up things a bit to prevent warnings.
+    $element['#default_value'] = array('latitude' => '', 'longitude' => '');
+  }
+
+  $element += location_latlon_form(t('Click on the map to mark the center point for your search, then submit the values.'), $element['#default_value']);
+
+  return $element;
+}
+
+function theme_location_views_map($element) {
+  return $element['#children'];
 }
