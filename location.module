@@ -20,6 +20,7 @@ define('LOCATION_USER_DONT_COLLECT',      0);
 define('LOCATION_USER_COLLECT',           1);
 
 include_once LOCATION_PATH .'/location.inc';
+require_once LOCATION_PATH .'/location.d5.inc';
 
 /**
  * Implementation of hook_menu().
@@ -78,14 +79,6 @@ function location_perm() {
     'view own user location',
     'view all user locations',
   );
-}
-
-/**
- * Temporary function to signify that this Location.module is using the 3.x api
- * on Drupal 5.
- */
-function location_newapi() {
-  return TRUE;
 }
 
 /**
@@ -150,25 +143,6 @@ function location_simpletest() {
   $dir = drupal_get_path('module', 'location') .'/tests';
   $tests = file_scan_directory($dir, '\.test$');
   return array_keys($tests);
-}
-
-// @@@ Page callback functions.
-// @TODO Remove in Drupal 6 and use the menu system to load the files instead.
-
-/**
- * Callback for admin settings form.
- */
-function location_admin_settings() {
-  require_once(drupal_get_path('module', 'location') .'/location.admin.inc');
-  return _location_admin_settings();
-}
-
-/**
- * Callback for map link page of admin settings form.
- */
-function location_map_link_options_form() {
-  require_once(drupal_get_path('module', 'location') .'/location.admin.inc');
-  return _location_map_link_options_form();
 }
 
 /**
@@ -641,18 +615,9 @@ function location_geocoding_parameters_form($country_iso, $service) {
   }
 }
 
-// @@@ Convert to menu system in D6.
-function location_geocoding_options_page() {
-  $iso = arg(4);
-  $service = arg(5);
-  if (!empty($iso) || !empty($service)) {
-    return location_geocoding_parameters_page($iso, $service);
-  }
-
-  require_once(drupal_get_path('module', 'location') .'/location.admin.inc');
-  return drupal_get_form('location_geocoding_options_form');
-}
-
+/**
+ * Alter the node_type_form form.
+ */
 function _location_node_type_form_alter($form_id, &$form) {
   $type = $form['#node_type']->type;
 
@@ -755,7 +720,6 @@ function location_form_alter($form_id, &$form) {
       break;
   }
 
-  // Add the Location fields on the Node edit form
   if (isset($form['type']['#value']) && $form['type']['#value'] .'_node_form' == $form_id) {
     // Add the Location fields on the Node edit form
     $node = $form['#node'];
@@ -1308,6 +1272,7 @@ function location_save(&$location, $cow = TRUE) {
       unset($location['lid']);
     }
   }
+
   if (empty($location['lid'])) {
     $location['lid'] = db_next_id('location_lid');
   }
@@ -1561,58 +1526,6 @@ function template_preprocess_locations(&$variables) {
   foreach ($locs as $location) {
     $variables['locations'][] = theme('location', $location, $variables['hide']);
   }
-}
-
-/**
- * Drupal 6 style theming helper.
- */
-function _location_render($file, $variables, $module = 'location') {
-  // Run the built-in template_preprocess function.
-  $func = 'template_preprocess_'. $file;
-  $func($variables);
-  $filepath = drupal_get_path('module', 'location');
-  if (file_exists(path_to_theme() ."/$file.tpl.php")) {
-    $filepath = path_to_theme();
-  }
-  if (!empty($variables['template_files'])) {
-    foreach ($variables['template_files'] as $temp) {
-      if (file_exists(path_to_theme() ."/$temp.tpl.php")) {
-        $filepath = path_to_theme();
-        $file = $temp;
-        break;
-      }
-      if (file_exists(drupal_get_path('module', $module) ."/$temp.tpl.php")) {
-        $filepath = drupal_get_path('module', $module);
-        $file = $temp;
-        break;
-      }
-    }
-  }
-  extract($variables, EXTR_SKIP);  // Extract the variables to a local namespace
-  ob_start();                      // Start output buffering
-  include "$filepath/$file.tpl.php"; // Include the file
-  $contents = ob_get_contents();   // Get the contents of the buffer
-  ob_end_clean();                  // End buffering and discard
-  return $contents;                // Return the contents
-}
-
-/////////////// Theme compatibility wrappers //////////////////
-// Needed due to the lack of the theme registry in Drupal 5. //
-///////////////////////////////////////////////////////////////
-
-function theme_location($location = array(), $hide = array()) {
-  $variables = array('location' => $location, 'hide' => $hide);
-  return _location_render('location', $variables);
-}
-
-function theme_location_distance($distance = 0, $units = 'km') {
-  $variables = array('distance' => $distance, 'units' => $units);
-  return _location_render('location_distance', $variables);
-}
-
-function theme_locations($locations = array(), $hide = array()) {
-  $variables = array('locations' => $locations, 'hide' => $hide);
-  return _location_render('locations', $variables);
 }
 
 /**
