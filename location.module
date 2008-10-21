@@ -702,6 +702,13 @@ function _location_user_settings_form_alter($form_id, &$form) {
 
   $form['location_settings_user'] = location_settings($settings);
   $form['location_settings_user']['#title'] = t('User locations');
+
+  $form['location_settings_user']['form']['register'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Collect during registration'),
+    '#default_value' => isset($settings['form']['register']) ? $settings['form']['register'] : FALSE,
+    '#weight' => -5,
+  );
 }
 
 /**
@@ -1006,6 +1013,14 @@ function location_user($op, &$edit, &$account, $category = NULL) {
           $form['locations'] = location_form($settings, $account->locations);
           return $form;
         }
+      }
+      break;
+
+    case 'register':
+      $settings = variable_get('location_settings_user', array());
+      if (isset($settings['form']['register']) && $settings['form']['register']) {
+        $form['locations'] = location_form($settings, array());
+        return $form;
       }
       break;
 
