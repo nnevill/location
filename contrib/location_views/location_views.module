@@ -390,7 +390,7 @@ function location_views_default_views() {
   $view->access = array();
   $view->view_args_php = '';
   $view->page = TRUE;
-  $view->page_title = '';
+  $view->page_title = 'Locations';
   $view->page_header = '';
   $view->page_header_format = '1';
   $view->page_footer = '';
@@ -415,7 +415,7 @@ function location_views_default_views() {
     array(
       'type' => 'country',
       'argdefault' => '6',
-      'title' => 'Country',
+      'title' => '%1',
       'options' => '',
       'wildcard' => '',
       'wildcard_substitution' => '',
@@ -423,7 +423,7 @@ function location_views_default_views() {
     array(
       'type' => 'province',
       'argdefault' => '6',
-      'title' => 'State',
+      'title' => '%2, %1',
       'options' => '',
       'wildcard' => '',
       'wildcard_substitution' => '',
@@ -431,7 +431,7 @@ function location_views_default_views() {
     array(
       'type' => 'city',
       'argdefault' => '6',
-      'title' => 'City',
+      'title' => 'Cities starting with %3 in %2, %1',
       'options' => '1',
       'wildcard' => '',
       'wildcard_substitution' => '',
@@ -781,6 +781,20 @@ function location_views_handler_arg_province($op, &$query, $argtype, $arg = '', 
       $name = location_province_name($query->location_country_arg, $query->province);
       return l(empty($name) ? t('unknown') : $name, "$arg/$query->province");
 
+    case 'title':
+      global $_location_views_country;
+      $title = FALSE;
+      if (isset($_location_views_country)) {
+        $title = location_province_name($_location_views_country, $query);
+      }
+      if (!$title) {
+        $title = location_province_name(variable_get('location_default_country', 'us'), $query);
+      }
+      if (!$title) {
+        $title = check_plain($query);
+      }
+      return $title;
+
     default:
       return location_views_handler_any($op, $query, $argtype, $arg, $type, 'province');
   }
@@ -812,7 +826,7 @@ function location_views_handler_arg_country($op, &$query, $argtype, $arg = '') {
     case 'title':
       global $_location_views_country;
       $_location_views_country = $query;
-      return $query == t('unknown') ? t('unknown') : $country_name;
+      return $query == t('unknown') ? t('unknown') : location_country_name($query);
 
     case 'filter':
       // Stash the arg for use by the province arg.
