@@ -423,7 +423,7 @@ function location_views_default_views() {
     array(
       'type' => 'province',
       'argdefault' => '6',
-      'title' => '%2, %1',
+      'title' => '%2',
       'options' => '',
       'wildcard' => '',
       'wildcard_substitution' => '',
@@ -431,7 +431,7 @@ function location_views_default_views() {
     array(
       'type' => 'city',
       'argdefault' => '6',
-      'title' => 'Cities starting with %3 in %2, %1',
+      'title' => '%3',
       'options' => '1',
       'wildcard' => '',
       'wildcard_substitution' => '',
