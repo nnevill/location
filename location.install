@@ -659,6 +659,7 @@ function location_update_5304() {
  */
 function location_update_5305() {
   $ret = array();
+  variable_set('location_5305_done', TRUE);
 
   $variables = array();
   $todelete = array();
