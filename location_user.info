@@ -1,0 +1,5 @@
+; $Id$
+name = User Locations
+description = Associate locations with users.
+dependencies = location
+package = Location
