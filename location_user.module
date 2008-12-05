@@ -33,7 +33,6 @@ function _location_user_settings_form_alter($form_id, &$form) {
   );
 }
 
-
 /**
  * Implementation of hook_user().
  */

@@ -1143,7 +1143,6 @@ function location_has_coordinates($location, $canonical = FALSE) {
   return TRUE;
 }
 
-
 /**
  * Invoke a hook_locationapi() operation on all modules.
  *
