@@ -786,3 +786,71 @@ function location_update_5307() {
   }
   return $ret;
 }
+
+/**
+ * In version 1.116 of location.module, committed 3/5/2008, I broke prefixed sequences.
+ * This update is an attempt to repair that.
+ */
+function location_update_5308() {
+  $ret = array();
+  global $db_prefix;
+
+  if (empty($db_prefix)) {
+    // Return early if the prefix is empty.
+    return $ret;
+  }
+
+  $prefix = '';
+  if (is_string($db_prefix)) {
+    $prefix = $db_prefix;
+  }
+  if (is_array($db_prefix)) {
+    $prefix = $db_prefix['default'];
+    if (isset($db_prefix['location'])) {
+      $prefix = $db_prefix['location'];
+    }
+  }
+
+  if ($prefix == '') {
+    // Location is unprefixed, return early.
+    return $ret;
+  }
+
+  drupal_set_message(t("Note: Location is now using {location}_lid as the sequence identifier, rather than location_lid. An attempt has been made to repair the sequence, but it is recommended that you double check to make sure this was done correctly."));
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query('LOCK TABLES {sequences} WRITE, {location} WRITE');
+      $old = db_result(db_query("SELECT id FROM {sequences} WHERE name = 'location_lid'"));
+      $high = db_result(db_query("SELECT MAX(lid) + 1 FROM {location}"));
+      db_query("REPLACE INTO {sequences} (name, id) VALUES ('{location}_lid', %d)", max($old, $high));
+      db_query('UNLOCK TABLES');
+      break;
+    case 'pgsql':
+      //////////
+      // PostgreSQL
+      //
+      // I do not expect anyone to ever hit this code, as with the broken sequences, they would have been getting errors
+      // during normal operations ever since I broke the db_next_id() call in March 2008.
+      // However, if someone DOES somehow turn up with this situation (perhaps they patched the call themselves without opening a bug)
+      // then I would like to get in contact with them.
+      drupal_set_message(t("Note: You are using a prefixed location table and PostgreSQL. Please post a followup to http://drupal.org/node/342163 (reopen if it is closed) and describe your table prefix situation."), 'error');
+
+      // The initial code I *was* going to use, until I realized it wouldn't actually work because I can't guarantee what the correct name for the sequences is.
+      // It all depends on how the table was created in the first place....
+      // I'd rather walk people through it by hand anyway.
+      /*
+      // Note: This isn't transaction-safe, or cluster-aware.
+      // You might have to fix sequences by yourself if you are in a clustered scenario.
+      $old = db_result(db_query("SELECT nextval('location_lid_seq')"));
+      $high = db_result(db_query("SELECT MAX(lid) + 1 FROM {location}"));
+      // This will skip several ids because I'm not a postgresql whiz and I don't trust myself
+      // not to make counting errors.
+      db_query("SELECT setval('%s_seq', %d)", db_prefix_tables('{location}_lid'), max($old, $high) + 5);
+      */
+      break;
+  }
+
+  return $ret;
+}
