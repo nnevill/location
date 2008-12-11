@@ -204,11 +204,13 @@ function _location_expand_location($element) {
       // @@@ Permission check hook?
       if ($fsettings[$field]['collect'] != 0) {
         $element[$field] = location_invoke_locationapi($defaults[$field], 'field_expand', $field, $fsettings[$field]['collect'], $defaults);
+        $element[$field]['#weight'] = (int)$fsettings[$field]['weight'];
       }
 
       // Only include 'Street Additional' if 'Street' is 'allowed' or 'required'
       if ($field == 'street' && $fsettings[$field]['collect']) {
         $element['additional'] = location_invoke_locationapi($defaults['additional'], 'field_expand', 'additional', 1, $defaults);
+        $element['additional']['#weight'] = (int)$fsettings[$field]['weight'];
       }
     }
   }
