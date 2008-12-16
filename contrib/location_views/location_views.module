@@ -945,7 +945,7 @@ function location_views_filter_handler_proximity($op, $filter, $filterinfo, &$qu
   $unit     = 'miles';
   $distance = $filter['operator'];
 
-  if (isset($filter['value']['latitude'])) {
+  if (is_array($filter['value']) && isset($filter['value']['latitude'])) {
     $lat = $filter['value']['latitude'];
     $lon = $filter['value']['longitude'];
   }
