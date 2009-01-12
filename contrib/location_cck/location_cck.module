@@ -195,11 +195,12 @@ function location_cck_field_formatter_info() {
  * node preview.
  */
 function location_cck_field_formatter($field, $item, $formatter, $node) {
+  $hide = array_keys(array_filter($field['location_settings']['display']['hide']));
   if (empty($item)) {
     return '';
   }
   $item = location_load_location($item['lid']);
-  return theme('location', $item);
+  return theme('location', $item, $hide);
 }
 
 
