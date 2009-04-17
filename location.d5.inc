@@ -31,6 +31,26 @@ function location_map_link_options_form() {
 }
 
 /**
+ * Callback for location utilities page of admin settings form.
+ */
+function location_util_form() {
+  require_once(drupal_get_path('module', 'location') .'/location.admin.inc');
+  return _location_util_form();
+}
+
+/**
+ * Compatibility shim for utilities form.
+ */
+function location_util_form_submit($form_id, $form_values) {
+  if ($form_values['op'] == t('Clear province cache')) {
+    return location_util_form_clear_province_cache_submit();
+  }
+  else if ($form_values['op'] == t('Clear supported country list')) {
+    return location_util_form_clear_supported_countries_submit();
+  }
+}
+
+/**
  * Callback for geocoding options page.
  */
 function location_geocoding_options_page() {

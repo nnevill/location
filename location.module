@@ -41,7 +41,7 @@ function location_menu($may_cache) {
       'description'         => t('Settings for Location module'),
       'callback'            => 'drupal_get_form',
       'callback arguments'  => array('location_admin_settings'),
-      'access'              => user_access('administer site configuration')
+      'access'              => user_access('administer site configuration'),
     );
     $items[] = array(
       'path'                => 'admin/settings/location/main',
@@ -55,7 +55,7 @@ function location_menu($may_cache) {
       'callback arguments'  => array('location_map_link_options_form'),
       'access'              => user_access('administer site configuration'),
       'type'                => MENU_LOCAL_TASK,
-      'weight'              => 1
+      'weight'              => 1,
     );
     $items[] = array(
       'path'                => 'admin/settings/location/geocoding',
@@ -63,7 +63,16 @@ function location_menu($may_cache) {
       'callback'            => 'location_geocoding_options_page',
       'access'              => user_access('administer site configuration'),
       'type'                => MENU_LOCAL_TASK,
-      'weight'              => 2
+      'weight'              => 2,
+    );
+    $items[] = array(
+      'path'                => 'admin/settings/location/util',
+      'title'               => t('Location utilities'),
+      'callback'            => 'drupal_get_form',
+      'callback arguments'  => array('location_util_form'),
+      'access'              => user_access('administer site configuration'),
+      'type'                => MENU_LOCAL_TASK,
+      'weight'              => 3,
     );
   }
   return $items;
