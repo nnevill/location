@@ -41,11 +41,53 @@ function location_menu() {
     'page arguments' => array('location_admin_settings'),
     'file' => 'location.admin.inc',
     'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
   );
-  $items['admin/config/location/main'] = array(
-    'title' => 'Main settings',
+  $items['admin/config/location/general'] = array(
+    'title' => 'General settings',
+    'description' => 'TEST',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
+
+/*  $items['admin/config/location/main'] = array(
+    'title' => 'Global settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );*/
+
+
+  $items['admin/config/location/bundle'] = array(
+    'title' => 'Bundles',
+    'description' => 'Configure bundles for working with locations.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('location_overview_bundles'),
+    'file' => 'location.admin.inc',
+    'access arguments' => array('admininster site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/config/location/bundle/%location_bundle'] = array(
+    'title' => 'Bundle overview',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('location_unimplemented_form', 4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/location/bundle/%location_bundle/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['admin/config/location/bundle/%location_bundle/delete'] = array(
+    'title' => 'Bundle overview',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('location_unimplemented_form', 4),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_CALLBACK,
+  );
+
+
+
   $items['admin/config/location/maplinking'] = array(
     'title' => 'Map links',
     'description' => 'Configure generation of links to external mapping sites.',
@@ -82,6 +124,26 @@ function location_menu() {
     'weight' => 3,
   );
 
+  /////////////////// DRUPAL 7
+  /*
+  $items['admin/config/location/bundles'] = array(
+    'title' => 'Locations',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('location_util_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'location.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/content/locations/bundle'] = array(
+    'title' => 'Location bundles',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('location_util_form'), // @@@
+    'access arguments' => array('administer site configuration'),
+    'file' => 'location.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  */
   return $items;
 }
 
@@ -178,6 +240,10 @@ function location_theme() {
     'location_geocoding_options' => array('render element' => 'form'),
     'location_element' => array('arguments' => array('element')),
     'location_distance' => array('template' => 'location_distance', 'arguments' => array('distance' => 0, 'units' => 'km')),
+
+    'location_bundle_overview' => array(
+      'variables' => array('name' => NULL, 'bundle' => NULL),
+    ),
   );
 }
 
@@ -1704,4 +1770,112 @@ function location_display($settings, $locations) {
     '#markup' => theme('locations', $locations, $hide),
     '#weight' => $settings['display']['weight'],
   );
+}
+
+//////////////////////////////// DRUPAL 7
+
+/**
+ * Implement hook_entity_info().
+ */
+function location_entity_info() {
+  $return = array(
+    'location' => array(
+      'label' => t('Location'),
+//      'controller class' => 'NodeController',
+      'base table' => 'location_locations',
+      'revision table' => 'location_location_revisions', // @@@ Needed?
+      'path callback' => 'location_path',
+      'fieldable' => TRUE,
+      'object keys' => array(
+        'id' => 'lid',
+        'revision' => 'lvid',
+        'bundle' => 'bundle',
+      ),
+      'bundle keys' => array(
+        'bundle' => 'bundle',
+      ),
+      // Node.module handles its own caching.
+      // 'cacheable' => FALSE,
+      'bundles' => array(),
+      'view modes' => array(
+        'standalone' => array(
+          'label' => t('Standalone page'),
+        ),
+/*        'teaser' => array(
+          'label' => t('Teaser'),
+        ),*/
+        'rss' => array(
+          'label' => t('RSS'),
+        ),
+      ),
+    ),
+  );
+/*
+  // Search integration is provided by node.module, so search-related
+  // view modes for nodes are defined here and not in search.module.
+  if (module_exists('search')) {
+    $return['node']['view modes'] += array(
+      'search_index' => array(
+        'label' => t('Search index'),
+      ),
+      'search_result' => array(
+        'label' => t('Search result'),
+      ),
+    );
+  }
+
+  // Bundles must provide a human readable name so we can create help and error
+  // messages, and the path to attach Field admin pages to.
+  foreach (node_type_get_names() as $type => $name) {
+    $return['node']['bundles'][$type] = array(
+      'label' => $name,
+      'admin' => array(
+        'path' => 'admin/structure/types/manage/%node_type',
+        'real path' => 'admin/structure/types/manage/' . str_replace('_', '-', $type),
+        'bundle argument' => 4,
+        'access arguments' => array('administer content types'),
+      ),
+    );
+  }
+   */
+
+  $result = db_query('SELECT * FROM {location_bundles}');
+  foreach ($result as $bundle) {
+    $return['location']['bundles'][$bundle->bundle] = array(
+      'label' => $bundle->name,
+      'admin' => array(
+        'path' => 'admin/config/location/bundle/%location_bundle',
+        'real path' => 'admin/config/location/bundle/' . str_replace('_', '-', $bundle->bundle),
+        'bundle argument' => 4,
+        'access arguments' => array('administer content types'), // @@@
+      ),
+    );
+  }
+
+  return $return;
+}
+
+/**
+ * Entity path callback.
+ */
+function location_path($location) {
+  return 'location/' . $location->lid;
+}
+
+function location_bundle_load($arg) {
+  return db_query('SELECT * FROM {location_bundles} WHERE bundle = :bundle', array(':bundle' => $arg))->fetch();
+}
+
+// @@@ Temporary function for stubbing out forms.
+function location_unimplemented_form($form, &$form_state, $arg = array()) {
+
+  $form['about'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h1>TODO: implement this.</h1>',
+  );
+  $form['data'] = array(
+    '#type' => 'markup',
+    '#markup' => check_plain(print_r($arg, TRUE)),
+  );
+  return $form;
 }

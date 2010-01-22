@@ -33,9 +33,85 @@ function location_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implement hook_schema().
  */
 function location_schema() {
+
+  $schema['location_locations'] = array(
+    'description' => 'Location entities.',
+    'fields' => array(
+      'lid' => array(
+        'description' => 'Primary Key: Unique location ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'bundle' => array(
+        'description' => 'The bundle in use for this location.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'lvid' => array(
+        'description' => 'The location revision.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('lid'),
+  );
+
+  $schema['location_location_revisions'] = array(
+    'description' => 'Location revisions.',
+    'fields' => array(
+      'lvid' => array(
+        'description' => 'Primary Key: Unique location revision ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'lid' => array(
+        'description' => 'The location ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('lvid'),
+  );
+
+  $schema['location_bundles'] = array(
+    'description' => 'Location field bundles.',
+    'fields' => array(
+      'bundle' => array(
+        'description' => 'Primary key: Bundle id.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'The human-readable name of this bundle.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'A brief description of this bundle.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'medium',
+        'translatable' => TRUE,
+      ),
+    ),
+    'primary key' => array('bundle'),
+  );
+
   $schema['location'] = array(
     'description' => 'Locational data managed by location.module.',
     'fields' => array(

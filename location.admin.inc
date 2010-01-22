@@ -335,3 +335,59 @@ function location_util_form_clear_supported_countries_submit() {
   drupal_set_message(t('Location supported country list cleared.'));
   cache_clear_all('location:supported-countries', 'cache_location');
 }
+
+/**
+ * Bundle overview page.
+ */
+function location_overview_bundles() {
+  // Based on node_overview_types().
+  $result = db_query('SELECT * FROM {location_bundles}');
+  $bundles = array();
+  foreach ($result as $row) {
+    $bundles[$row->bundle] = $row;
+  }
+  $field_ui = module_exists('field_ui');
+  $header = array(t('Name'), array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2'));
+  $rows = array();
+
+  foreach ($bundles as $key => $bundle) {
+    $row = array();
+
+    $row[] = theme('location_bundle_overview', array('name' => $bundle->name, 'bundle' => $bundle));
+
+    $bundle_url_str = str_replace('_', '-', $key);
+    $row[] = array('data' => l(t('edit'), 'admin/config/location/bundle/' . $bundle_url_str));
+
+    if ($field_ui) {
+      // Manage fields.
+      $row[] = array('data' => l(t('manage fields'), 'admin/config/location/bundle/' . $bundle_url_str . '/fields'));
+
+      // Display fields.
+      $row[] = array('data' => l(t('manage display'), 'admin/config/location/bundle/' . $bundle_url_str . '/display'));
+    }
+
+    // Set the delete column.
+    $row[] = array('data' => l(t('delete'), 'admin/config/location/bundle/' . $bundle_url_str . '/delete'));
+
+    $rows[] = $row;
+  }
+
+  $build['node_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No content types available. <a href="@link">Add content type</a>.', array('@link' => url('admin/structure/types/add'))),
+  );
+
+  return $build;
+}
+
+function theme_location_bundle_overview($variables) {
+  $name = $variables['name'];
+  $bundle = $variables['bundle'];
+
+  $output = check_plain($name);
+  $output .= ' <small> (Machine name: ' . check_plain($bundle->bundle) . ')</small>';
+  $output .= '<div class="description">' . filter_xss_admin($bundle->description) . '</div>';
+  return $output;
+}
