@@ -882,6 +882,7 @@ function _location_autocomplete($country, $string = '') {
       }
     }
   }
+  drupal_set_header('Content-Type: text/javascript; charset=utf-8');
   echo drupal_to_js($matches);
   return;
 }
