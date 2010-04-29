@@ -148,25 +148,17 @@ function theme_location($location = array(), $hide = array()) {
       $city_province_postal[] = $location['city'];
     }
 
-    if ((!empty($location['city']) && !in_array('city', $hide)) ||
-        (!empty($location['province']) && !in_array('province', $hide)) ||
-        (!empty($location['postal_codet']) && !in_array('postal_code', $hide))) {
-
-      $city_province_postal = array();
-
-      if (!empty($location['city']) && !in_array('city', $hide)) {
-        $city_province_postal[] = '<span class="locality">'. $location['city'] .'</span>';
-      }
-
+    if (!empty($location['city']) && !in_array('city', $hide)) {
+      $output .= '<span class="locality">' . $location['city'] . '</span>';
       if (!empty($location['province']) && !in_array('province', $hide)) {
-        $city_province_postal[] = '<span class="region">'. $location['province'] .'</span>';
+        $output .= ', ';
       }
-
-      if (!empty($location['postal_code']) && !in_array('postal_code', $hide)) {
-        $city_province_postal[] = '<span class="postal-code">'. $location['postal_code'] .'</span>';
-      }
-
-      $output .= implode(', ', $city_province_postal);
+    }
+    if (!empty($location['province']) && !in_array('province', $hide)) {
+      $output .= '<span class="region">' . $location['province'] . '</span> ';
+    }
+    if (!empty($location['postal_code']) && !in_array('postal_code', $hide)) {
+      $output .= ' <span class="postal-code">' . $location['postal_code'] . '</span>';
     }
 
     if (!empty($location['country']) && !in_array('country', $hide)) {
