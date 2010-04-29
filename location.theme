@@ -170,10 +170,10 @@ function theme_location($location = array(), $hide = array()) {
       $output .=  '<div class="geo"><abbr class="latitude" title="'. $location['latitude'] .'" /><abbr class="longitude" title="'. $location['latitude'] .'" /></div>';
     }
 
-    $output .= '</div></div>';
+    $output .= '</div>';
+    $output .= '<div class="map-link">' . location_map_link($location) . '</div>';
+    $output .= '</div>';
   }
-
-  $output .= location_map_link($location);
 
   return $output;
 }
