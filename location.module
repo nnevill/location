@@ -163,6 +163,18 @@ function location_permission() {
       'title' => t('Submit Latitude / Longitude'),
       'description' => t('Allow the user to submit raw coordinates.'),
     ),
+    'view location directory' => array(
+      'title' => t('View location directory'),
+      'description' => t('Allow the user to view the location directory view.'),
+    ),
+    'view node location table' => array(
+      'title' => t('View node location table'),
+      'description' => t('Allow the user to view the node location table view.'),
+    ),
+    'view user location table' => array(
+      'title' => t('View user location table'),
+      'description' => t('Allow the user to view the user location table view.'),
+    ),
   );
 }
 
