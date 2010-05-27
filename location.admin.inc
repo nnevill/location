@@ -145,6 +145,14 @@ function location_map_link_options_form() {
 function location_geocoding_options_form() {
   $form = array();
 
+  $form['location_geocode_google_minimum_accuracy'] = array(
+    '#type' => 'select',
+    '#title' => t('Google Maps geocoding minimum accuracy'),
+    '#options' => location_google_geocode_accuracy_codes(),
+    '#default_value' => variable_get('location_geocode_google_minimum_accuracy', '3'),
+    '#description' => t('The Google Maps geocoding API returns results with a given accuracy. Any responses below this minimum accuracy will be ignored. See a !accuracy_values_link.', array('!accuracy_values_link' => '<a href="http://code.google.com/apis/maps/documentation/reference.html#GGeoAddressAccuracy">description of these values</a>'))
+  );
+
   $form['countries'] = array();
 
   // First, we build two arrays to help us figure out on the fly whether a specific country is covered by a multi-country geocoder,
@@ -257,7 +265,7 @@ function location_geocoding_options_form_submit($form, &$form_state) {
   $general_geocoders_in_use = array();
 
   foreach ($form_state['values'] as $key => $value) {
-    if (substr($key, 0, 17) == 'location_geocode_') {
+    if (substr($key, 0, 17) == 'location_geocode_'  && $key != 'location_geocode_google_minimum_accuracy') {
       if (in_array($value, $general_geocoders)) {
         $general_geocoders_in_use[$value] = $value;
         variable_set($key, $value);
@@ -265,6 +273,7 @@ function location_geocoding_options_form_submit($form, &$form_state) {
     }
   }
 
+  variable_set('location_geocode_google_minimum_accuracy', $form_state['values']['location_geocode_google_minimum_accuracy']);
   variable_set('location_general_geocoders_in_use', $general_geocoders_in_use);
 }
 
@@ -288,6 +297,7 @@ function theme_location_map_link_options(&$data) {
 }
 
 function theme_location_geocoding_options(&$data) {
+  $output = drupal_render($form['location_geocode_google_minimum_accuracy']);
   $form = $data['form'];
   $header = array(
     array('align' => 'center', 'data' => '<center>'. t('Country') .'</center>'),
@@ -308,7 +318,7 @@ function theme_location_geocoding_options(&$data) {
     );
     $rows[] = $row;
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows));
   $output .= drupal_render_children($form);
   return $output;
 }
