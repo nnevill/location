@@ -132,7 +132,7 @@ function google_geocode_location($location = array()) {
   $accuracy_code_match = array();
   preg_match('/Accuracy="([0-9])"/', $http_reply->data, $accuracy_code_match);
   $accuracy_code = $accuracy_code_match[1];
-  if ($accuracy_code < 3) {
+  if ($accuracy_code < variable_get('location_geocode_' . $location['country'] . 'google_accuracy_code', variable_get('location_geocode_google_minimum_accuracy', '3'))) {
     return NULL;
   }
 
@@ -170,6 +170,17 @@ function google_geocode_settings() {
       '#maxlength' => 128,
       '#default_value' => variable_get('location_geocode_google_apikey', ''),
       '#description' => t('In order to use the Google Maps API geocoding web-service, you will need a Google Maps API Key.  You can obtain one at the !sign_up_link for the !google_maps_api.  PLEASE NOTE: You will <em>not</em> have to re-enter your API key for each country for which you have selected Google Maps for geocoding.  This setting is global.', array('!sign_up_link' => '<a href="http://www.google.com/apis/maps/signup.html">sign-up page</a>', '!google_maps_api' => '<a href="http://www.google.com/apis/maps/">Google Maps API</a>'))
+    );
+  }
+
+  $country = arg(4);
+  if ($country) {
+    $form['location_geocode_' . $country . '_google_accuracy_code'] = array(
+      '#type' => 'select',
+      '#title' => t('Google Maps Geocoding Accuracy for %country', array('%country' => $country ) ),
+      '#default_value' => variable_get('location_geocode_' . $country . '_google_accuracy_code', variable_get('location_geocode_google_minimum_accuracy', '3')),
+      '#options' => location_google_geocode_accuracy_codes(),
+      '#description' => t('The minimum required accuracy for the geolocation data to be saved.'),
     );
   }
 
