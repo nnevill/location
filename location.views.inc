@@ -265,7 +265,7 @@ function location_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
+      'handler' => 'views_handler_filter_float',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -279,7 +279,7 @@ function location_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
+      'handler' => 'views_handler_filter_float',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
