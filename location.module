@@ -246,8 +246,8 @@ function location_theme() {
         'hide' => array(),
       ),
     ),
-    'location_latitude_dms' => array('arguments' => array('latitude')),
-    'location_longitude_dms' => array('arguments' => array('longitude')),
+    'location_latitude_dms' => array('variables' => array('latitude')),
+    'location_longitude_dms' => array('variables' => array('longitude')),
     'location_map_link_options' => array('render element' => 'form'),
     'location_geocoding_options' => array('render element' => 'form'),
     'location_element' => array('arguments' => array('element')),
@@ -1461,7 +1461,8 @@ function location_dd_to_dms($coord) {
 /**
  * Display a coordinate.
  */
-function theme_location_latitude_dms($latitude) {
+function theme_location_latitude_dms(&$variables) {
+  $latitude = $variables['latitude'];
   $output = '';
   list($degrees, $minutes, $seconds, $negative) = location_dd_to_dms($latitude);
   $output .= "${degrees}° ${minutes}' ${seconds}\" ";
@@ -1474,7 +1475,8 @@ function theme_location_latitude_dms($latitude) {
   return $output;
 }
 
-function theme_location_longitude_dms($longitude) {
+function theme_location_longitude_dms(&$variables) {
+  $longitude = $variables['longitude'];
   $output = '';
   list($degrees, $minutes, $seconds, $negative) = location_dd_to_dms($longitude);
   $output .= "${degrees}° ${minutes}' ${seconds}\" ";
@@ -1559,14 +1561,14 @@ function template_preprocess_location(&$variables) {
   $variables['latitude_dms'] = '';
   if (!empty($location['latitude'])) {
     $variables['latitude'] = check_plain($location['latitude']);
-    $variables['latitude_dms'] = theme('location_latitude_dms', $location['latitude']);
+    $variables['latitude_dms'] = theme('location_latitude_dms', array('latitude' => $location['latitude']));
   }
 
   $variables['longitude'] = '';
   $variables['longitude_dms'] = '';
   if (!empty($location['longitude'])) {
     $variables['longitude'] = check_plain($location['longitude']);
-    $variables['longitude_dms'] = theme('location_longitude_dms', $location['longitude']);
+    $variables['longitude_dms'] = theme('location_longitude_dms', array('longitude' => $location['longitude']));
   }
 
   // Add a country-specific template suggestion.
