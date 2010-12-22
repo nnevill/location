@@ -1,7 +1,9 @@
 ; $Id$
 name = Location CCK
 description = Defines a Location field type.
-core = 6.x
+core = 7.x
 package = CCK
+files[] = location_cck.install
+files[] = location_cck.module
 dependencies[] = location
-dependencies[] = content
+dependencies[] = cck
