@@ -231,7 +231,7 @@ function location_element_info() {
  */
 function location_theme() {
   return array(
-    'location_settings' => array('arguments' => array('element')),
+    'location_settings' => array('render element' => 'element'),
     'locations' => array(
       'template' => 'locations',
       'variables' => array(
@@ -518,7 +518,7 @@ function _location_expand_location_settings($element) {
     );
     $element[$field]['name'] = array(
       '#type' => 'item',
-      '#value' => $title,
+      '#markup' => $title,
     );
     $element[$field]['collect'] = array(
       '#type' => 'select',
@@ -546,7 +546,9 @@ function _location_expand_location_settings($element) {
   return $element;
 }
 
-function theme_location_settings($element) {
+function theme_location_settings($variables) {
+  $element = $variables['element'];
+
   $rows = array();
   $header = array(
     array(
@@ -558,7 +560,6 @@ function theme_location_settings($element) {
   // Force country required.
   $element['country']['default']['#required'] = TRUE;
   unset($element['country']['collect']['#options'][0]);
-
   foreach (element_children($element) as $key) {
     $element[$key]['weight']['#attributes']['class'] = array('location-settings-weight');
     unset($element[$key]['default']['#title']);
@@ -583,7 +584,7 @@ function theme_location_settings($element) {
 
   drupal_add_tabledrag('location-settings-table', 'order', 'sibling', 'location-settings-weight');
 
-  $output = theme('table', $header, $rows, array('id' => 'location-settings-table'));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'location-settings-table')));
   //return theme('form_element', $element, $element['#children']);
   return $output;
 }
