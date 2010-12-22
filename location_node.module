@@ -17,6 +17,9 @@ function location_node_form_alter(&$form, &$form_state, $form_id) {
     if (isset($settings['multiple']['max']) && $settings['multiple']['max'] > 0) {
       $locations = isset($node->locations) ? $node->locations : array();
       $form['locations'] = location_form($settings, $locations);
+      $form['locations']['#group'] = 'additional_settings';
+      unset($form['locations']['collapsible']);
+      unset($form['locations']['collapsed']);
     }
   }
 }
@@ -156,8 +159,6 @@ function location_node_form_node_type_form_alter(&$form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('RSS Settings'),
     '#description' => t('Here, you can change how locative data affects RSS feeds on nodes.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
     '#tree' => TRUE,
     '#weight' => 5,
   );

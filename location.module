@@ -200,9 +200,9 @@ function location_help($path, $arg) {
 }
 
 /**
- * Implementation of hook_elements().
+ * Implement hook_element_info().
  */
-function location_elements() {
+function location_element_info() {
   return array(
     'location_element' => array(
       '#input' => TRUE,
@@ -1628,16 +1628,12 @@ function location_settings($old = FALSE) {
   $form = array(
     '#type' => 'fieldset',
     '#title' => t('Locative information'),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
     '#tree' => TRUE,
   );
 
   $form['multiple'] = array(
     '#type' => 'fieldset',
     '#title' => t('Number of locations'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
     '#tree' => TRUE,
     '#weight' => 2,
   );
@@ -1669,8 +1665,6 @@ function location_settings($old = FALSE) {
   $form['form'] = array(
     '#type' => 'fieldset',
     '#title' => t('Collection settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
     '#tree' => TRUE,
     '#weight' => 4,
   );
@@ -1704,8 +1698,6 @@ function location_settings($old = FALSE) {
     '#type' => 'fieldset',
     '#title' => t('Display Settings'),
 //    '#description' => t('Here, you can change how locative data appears in nodes when viewed.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
     '#tree' => TRUE,
     '#weight' => 6,
   );
@@ -1720,7 +1712,6 @@ function location_settings($old = FALSE) {
   $form['display']['hide'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Hide fields from display'),
-    '#collapsed' => TRUE,
     '#default_value' => isset($old['display']['hide']) ? $old['display']['hide'] : array(),
     '#options' => $fields,
   );
@@ -1754,11 +1745,6 @@ function location_form($settings, $locations) {
     '#collapsible' => $settings['form']['collapsible'],
     '#collapsed' => $settings['form']['collapsed'],
   );
-
-  // If there is only one form, hide the outer fieldset.
-  if ($settings['multiple']['max'] == 1) {
-    $form['#type'] = 'markup';
-  }
 
   for ($i = 0; $i < $numforms; $i++) {
     $required = FALSE;
