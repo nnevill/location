@@ -234,14 +234,14 @@ function location_theme() {
     'location_settings' => array('arguments' => array('element')),
     'locations' => array(
       'template' => 'locations',
-      'arguments' => array(
+      'variables' => array(
         'locations' => NULL,
         'hide' => array(),
       ),
     ),
     'location' => array(
       'template' => 'location',
-      'arguments' => array(
+      'variables' => array(
         'location' => NULL,
         'hide' => array(),
       ),
@@ -1613,7 +1613,7 @@ function template_preprocess_locations(&$variables) {
   $variables['rawlocs'] = $locs;
 
   foreach ($locs as $location) {
-    $variables['locations'][] = theme('location', $location, $variables['hide']);
+    $variables['locations'][] = theme('location', array('location' => $location, 'hide' => $variables['hide']));
   }
 }
 
@@ -1782,7 +1782,7 @@ function location_display($settings, $locations) {
   // Show all locations
   return array(
     '#type' => 'markup',
-    '#markup' => theme('locations', $locations, $hide),
+    '#markup' => theme('locations', array('locations' => $locations, 'hide' => $hide)),
     '#weight' => $settings['display']['weight'],
   );
 }
