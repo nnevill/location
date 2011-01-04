@@ -162,6 +162,7 @@ function _location_search($op = 'search', $keys = null) {
           'location' => $loc,
         );
       }
+      dpm($results);
       return $results;
   }
 }
