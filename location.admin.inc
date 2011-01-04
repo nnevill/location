@@ -287,7 +287,7 @@ function location_geocoding_options_form_submit($form, &$form_state) {
   variable_set('location_general_geocoders_in_use', $general_geocoders_in_use);
 }
 
-function theme_location_map_link_options(&$data) {
+function theme_location_map_link_options($data) {
   $form = $data['form'];
   $header = array(array('align' => 'center', 'data' => '<center>'. t('Country') .'</center>'), array('align' => 'center', 'data' => '<center>'. t('Options') .'</center>'));
   $rows = array();
@@ -306,7 +306,7 @@ function theme_location_map_link_options(&$data) {
   return $output;
 }
 
-function theme_location_geocoding_options(&$data) {
+function theme_location_geocoding_options($data) {
   $output = drupal_render($form['location_geocode_google_minimum_accuracy']);
   $form = $data['form'];
   $header = array(
