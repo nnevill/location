@@ -1185,7 +1185,7 @@ function location_save(&$location, $cow = TRUE, $criteria = array()) {
           $query->condition($key, $value);
         }
         $associated = $query->countQuery()->execute()->fetchField();
-        $all = db_query("SELECT COUNT(*) FROM {location_instance} WHERE lid = :lid", array(':lid', $location['lid']))->fetchField();
+        $all = db_query("SELECT COUNT(*) FROM {location_instance} WHERE lid = :lid", array(':lid' => $location['lid']))->fetchField();
         if ($associated != $all) {
           // If there were a different number of instances than instances matching the criteria,
           // we need a new LID.
