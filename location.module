@@ -20,7 +20,7 @@ define('LOCATION_LATLON_JIT_GEOCODING',   4); // Force regeocoding immediately.
 define('LOCATION_USER_DONT_COLLECT',      0);
 define('LOCATION_USER_COLLECT',           1);
 
-include_once LOCATION_PATH .'/location.inc';
+include_once LOCATION_PATH . '/location.inc';
 
 /**
  * Implementation of hook_menu().
@@ -186,15 +186,15 @@ function location_permission() {
 function location_help($path, $arg) {
   switch ($path) {
     case 'admin/help#location':
-      $output = '<p>'. t('The location module allows you to associate a geographic location with content and users. Users can do proximity searches by postal code.  This is useful for organizing communities that have a geographic presence.') .'</p>';
-      $output .= '<p>'. t('To administer locative information for content, use the content type administration page.  To support most location enabled features, you will need to install the country specific include file.  To support postal code proximity searches for a particular country, you will need a database dump of postal code data for that country.  As of June 2007 only U.S. and German postal codes are supported.') .'</p>';
+      $output = '<p>' . t('The location module allows you to associate a geographic location with content and users. Users can do proximity searches by postal code.  This is useful for organizing communities that have a geographic presence.') . '</p>';
+      $output .= '<p>' . t('To administer locative information for content, use the content type administration page.  To support most location enabled features, you will need to install the country specific include file.  To support postal code proximity searches for a particular country, you will need a database dump of postal code data for that country.  As of June 2007 only U.S. and German postal codes are supported.') . '</p>';
       $output .= t('<p>You can</p>
 <ul>
 <li>administer locative information at <a href="@admin-node-configure-types">Administer &gt;&gt; Content management &gt;&gt; Content types</a> to configure a type and see the locative information.</li>
 <li>administer location at <a href="@admin-settings-location">Administer &gt;&gt; Site configuration &gt;&gt; Location</a>.</li>
 <li>use a database dump for a U.S. and/or German postal codes table that can be found at <a href="@external-http-cvs-drupal-org">zipcode database</a>.</li>
-', array('@admin-node-configure-types' => url('admin/content/types'), '@admin-settings-location' => url('admin/settings/location'), '@external-http-cvs-drupal-org' => 'http://cvs.drupal.org/viewcvs/drupal/contributions/modules/location/database/')) .'</ul>';
-      $output .= '<p>'. t('For more information please read the configuration and customization handbook <a href="@location">Location page</a>.', array('@location' => 'http://www.drupal.org/handbook/modules/location/')) .'</p>';
+', array('@admin-node-configure-types' => url('admin/content/types'), '@admin-settings-location' => url('admin/settings/location'), '@external-http-cvs-drupal-org' => 'http://cvs.drupal.org/viewcvs/drupal/contributions/modules/location/database/')) . '</ul>';
+      $output .= '<p>' . t('For more information please read the configuration and customization handbook <a href="@location">Location page</a>.', array('@location' => 'http://www.drupal.org/handbook/modules/location/')) . '</p>';
       return $output;
   }
 }
@@ -282,7 +282,7 @@ function location_ctools_plugin_directory($module, $plugin) {
  * Process a location element.
  */
 function _location_expand_location($element) {
-  drupal_add_css(drupal_get_path('module', 'location') .'/location.css');
+  drupal_add_css(drupal_get_path('module', 'location') . '/location.css');
   $element['#tree'] = TRUE;
 
   if (!isset($element['#title'])) {
@@ -372,7 +372,7 @@ function _location_expand_location($element) {
         '#value' => $defaults['longitude'],
       );
       $source = t('Unknown');
-      switch($defaults['source']) {
+      switch ($defaults['source']) {
         case LOCATION_LATLON_USER_SUBMITTED:
           $source = t('User-submitted');
           break;
@@ -718,12 +718,12 @@ function location_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
           );
 
         case 'province':
-          drupal_add_js(drupal_get_path('module', 'location') .'/location_autocomplete.js');
+          drupal_add_js(drupal_get_path('module', 'location') . '/location_autocomplete.js');
           $country = $a5['country']['default'] ? $a5['country']['default'] : variable_get('site_default_country', 'us');
           return array(
             '#type' => 'textfield',
             '#title' => t('State/Province'),
-            '#autocomplete_path' => 'location/autocomplete/'. $country,
+            '#autocomplete_path' => 'location/autocomplete/' . $country,
             '#default_value' => variable_get('location_use_province_abbreviation', 1) ? $obj : location_province_name($country, $obj),
             '#size' => 64,
             '#maxlength' => 64,
@@ -819,8 +819,8 @@ function location_geocoding_parameters_page($country_iso, $service) {
 
 function location_geocoding_parameters_form(&$form_state, $country_iso, $service) {
   location_load_country($country_iso);
-  $geocode_settings_form_function_specific = 'location_geocode_'. $country_iso .'_'. $service .'_settings';
-  $geocode_settings_form_function_general = $service .'_geocode_settings';
+  $geocode_settings_form_function_specific = 'location_geocode_' . $country_iso . '_' . $service . '_settings';
+  $geocode_settings_form_function_general = $service . '_geocode_settings';
   if (function_exists($geocode_settings_form_function_specific)) {
     return system_settings_form($geocode_settings_form_function_specific());
   }
@@ -993,7 +993,7 @@ function location_load_location($lid) {
 function _location_autocomplete($country, $string = '') {
   $counter = 0;
   $string   = strtolower($string);
-  $string   = '/^'. preg_quote($string) .'/';
+  $string   = '/^' . preg_quote($string) . '/';
   $matches  = array();
 
   if (strpos($country, ',') !== FALSE) {
@@ -1071,12 +1071,12 @@ function location_has_coordinates($location, $canonical = FALSE) {
 function location_invoke_locationapi(&$location, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
   $return = array();
   foreach (module_implements('locationapi') as $name) {
-    $function = $name .'_locationapi';
+    $function = $name . '_locationapi';
     $result = $function($location, $op, $a3, $a4, $a5);
     if (isset($result) && is_array($result)) {
       $return = array_merge($return, $result);
     }
-    else if (isset($result)) {
+    elseif (isset($result)) {
       $return[] = $result;
     }
   }
@@ -1231,7 +1231,7 @@ function location_calc_difference($oldloc, $newloc, &$changes) {
       $location_changed = TRUE;
       continue;
     }
-    else if ($oldloc[$k] == $v) {
+    elseif ($oldloc[$k] == $v) {
       $changes[$k] = FALSE;
       // Exact match, no change.
       continue;
@@ -1494,7 +1494,7 @@ function theme_location_longitude_dms($variables) {
  * Implementation of hook_token_values().
  */
 function location_token_values($type, $object = NULL) {
-  require_once(drupal_get_path('module', 'location') .'/location.token.inc');
+  require_once(drupal_get_path('module', 'location') . '/location.token.inc');
   return _location_token_values($type, $object);
 }
 
@@ -1502,7 +1502,7 @@ function location_token_values($type, $object = NULL) {
  * Implementation of hook_token_list().
  */
 function location_token_list($type = 'all') {
-  require_once(drupal_get_path('module', 'location') .'/location.token.inc');
+  require_once(drupal_get_path('module', 'location') . '/location.token.inc');
   return _location_token_list($type);
 }
 
@@ -1528,7 +1528,7 @@ function template_preprocess_location(&$variables) {
   // This will get taken back out if map links are hidden.
   $location['map_link'] = TRUE;
   if (is_array($variables['hide'])) {
-    foreach($variables['hide'] as $key) {
+    foreach ($variables['hide'] as $key) {
       unset($location[$key]);
       // Special case for coords.
       if ($key == 'coords') {
@@ -1575,7 +1575,7 @@ function template_preprocess_location(&$variables) {
   // Add a country-specific template suggestion.
   if (!empty($location['country']) && location_standardize_country_code($location['country'])) {
     // $location['country'] is normalized in the previous line.
-    $variables['template_files'][] = 'location-'. $location['country'];
+    $variables['template_files'][] = 'location-' . $location['country'];
   }
 
   // Display either the code or the full name for the province.
