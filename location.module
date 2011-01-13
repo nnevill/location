@@ -719,7 +719,7 @@ function location_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
 
         case 'province':
           drupal_add_js(drupal_get_path('module', 'location') . '/location_autocomplete.js');
-          $country = $a5['country']['default'] ? $a5['country']['default'] : variable_get('site_default_country', 'us');
+          $country = !empty($a5['country']['default']) ? $a5['country']['default'] : variable_get('site_default_country', 'us');
           return array(
             '#type' => 'textfield',
             '#title' => t('State/Province'),
@@ -1018,7 +1018,7 @@ function _location_autocomplete($country, $string = '') {
       }
     }
   }
-  drupal_json($matches);
+  drupal_json_output($matches);
 }
 
 /**
