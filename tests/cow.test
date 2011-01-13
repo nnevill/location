@@ -27,26 +27,25 @@ class CowInstanceTest extends LocationTestCase {
 
   function getInfo() {
     return array(
-      'name' => t('Location Copy on Write checks'),
-      'description' => t('Test corner cases of the copy on write mechanism.'),
-      'group' => t('Location'),
+      'name' => 'Location Copy on Write checks',
+      'description' => 'Test corner cases of the copy on write mechanism.',
+      'group' => 'Location',
     );
   }
 
   function setUp() {
-    parent::setUp('location', 'location_node', 'devel');
+    parent::setUp('location_node');
     $web_admin = $this->drupalCreateUser(array('administer nodes', 'submit latitude/longitude', 'administer site configuration', 'access administration pages', 'administer content types'));
     $this->drupalLogin($web_admin);
   }
 
   function testCreateLocation() {
-    $settings = array();
-    $location_type = $this->addLocationContentType($settings);
-
+    $settings = $this->getLocationSettingsDefaults();
+    $location_type = $this->drupalCreateContentType($settings);
     $location1_name = $this->randomName();
 
     $node = $this->drupalCreateNode(array(
-      'type' => $location_type,
+      'type' => $location_type->type,
       'locations' => array(
         0 => array(
           'name' => $location1_name,

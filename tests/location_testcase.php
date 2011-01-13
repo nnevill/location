@@ -6,6 +6,24 @@
  * Common functions for Location tests.
  */
 
+class LocationUnitTestCase extends DrupalUnitTestCase {
+  /**
+   * Custom assertion -- will check each element of an array against a reference value.
+   */
+  function assertArrayEpsilon($result, $expected, $epsilon, $message = '', $group = 'Other') {
+    foreach ($expected as $k => $test) {
+      $lower = $test - $epsilon;
+      $upper = $test + $epsilon;
+      if ($result[$k] < $lower || $result[$k] > $upper) {
+        $this->assert('fail', $message ? $message : t('Value deviates by @amt, which is more than @maxdev.', array('@amt' => abs($test - $result[$k]), '@maxdev' => $epsilon)), $group);
+      }
+      else {
+        $this->assert('pass', $message ? $message : t('Value within expected margin.'), $group);
+      }
+    }
+  }
+}
+
 class LocationTestCase extends DrupalWebTestCase {
 
   /**
@@ -16,10 +34,10 @@ class LocationTestCase extends DrupalWebTestCase {
       $lower = $test - $epsilon;
       $upper = $test + $epsilon;
       if ($result[$k] < $lower || $result[$k] > $upper) {
-        $this->_assert('fail', $message ? $message : t('Value deviates by @amt, which is more than @maxdev.', array('@amt' => abs($test - $result[$k]), '@maxdev' => $epsilon)), $group);
+        $this->assert('fail', $message ? $message : t('Value deviates by @amt, which is more than @maxdev.', array('@amt' => abs($test - $result[$k]), '@maxdev' => $epsilon)), $group);
       }
       else {
-        $this->_assert('pass', $message ? $message : t('Value within expected margin.'), $group);
+        $this->assert('pass', $message ? $message : t('Value within expected margin.'), $group);
       }
     }
   }
@@ -64,11 +82,25 @@ class LocationTestCase extends DrupalWebTestCase {
     } while (!$edit_flattened);
   }
 
+  function getLocationSettingsDefaults() {
+    return array(
+      'location_settings' => array(
+        'multiple' => array(
+          'max' => 1,
+          'add' => 1,
+        ),
+        'form' => array(
+          'fields' => $this->getLocationFieldDefaults(),
+        ),
+      ),
+    );
+  }
+
   function addLocationContentType(&$settings, $add = array()) {
     // find a non-existent random type name.
     do {
       $name = strtolower($this->randomName(3, 'type_'));
-    } while (node_get_types('type', $name));
+    } while (node_type_get_type($name));
 
     // Get the (settable) defaults.
     $defaults = $this->getLocationFieldDefaults();
@@ -102,6 +134,8 @@ class LocationTestCase extends DrupalWebTestCase {
    * Delete a node.
    */
   function deleteNode($nid) {
+    return node_delete($nid);
+    /*
     // Implemention taken from node_delete, with some assumptions regarding
     // function_exists removed.
 
@@ -115,6 +149,7 @@ class LocationTestCase extends DrupalWebTestCase {
 
     // Clear the page and block caches.
     cache_clear_all();
+    */
   }
 
   /**
