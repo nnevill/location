@@ -34,7 +34,7 @@ function location_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['admin/config/location'] = array(
+  $items['admin/config/content/location'] = array(
     'title' => 'Location',
     'description' => 'Settings for Location module',
     'page callback' => 'drupal_get_form',
@@ -43,19 +43,19 @@ function location_menu() {
     'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
   );
-  $items['admin/config/location/general'] = array(
+  $items['admin/config/content/location/general'] = array(
     'title' => 'General settings',
     'description' => 'TEST',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-/*  $items['admin/config/location/main'] = array(
+/*  $items['admin/config/content/location/main'] = array(
     'title' => 'Global settings',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );*/
 
 
-  $items['admin/config/location/bundle'] = array(
+  $items['admin/config/content/location/bundle'] = array(
     'title' => 'Bundles',
     'description' => 'Configure bundles for working with locations.',
     'page callback' => 'drupal_get_form',
@@ -65,7 +65,7 @@ function location_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/config/location/bundle/%location_bundle'] = array(
+  $items['admin/config/content/location/bundle/%location_bundle'] = array(
     'title' => 'Bundle overview',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('location_unimplemented_form', 4),
@@ -73,12 +73,12 @@ function location_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
-  $items['admin/config/location/bundle/%location_bundle/edit'] = array(
+  $items['admin/config/content/location/bundle/%location_bundle/edit'] = array(
     'title' => 'Edit',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/config/location/bundle/%location_bundle/delete'] = array(
+  $items['admin/config/content/location/bundle/%location_bundle/delete'] = array(
     'title' => 'Bundle overview',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('location_unimplemented_form', 4),
@@ -88,7 +88,7 @@ function location_menu() {
 
 
 
-  $items['admin/config/location/maplinking'] = array(
+  $items['admin/config/content/location/maplinking'] = array(
     'title' => 'Map links',
     'description' => 'Configure generation of links to external mapping sites.',
     'page callback' => 'drupal_get_form',
@@ -98,7 +98,7 @@ function location_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-  $items['admin/config/location/geocoding'] = array(
+  $items['admin/config/content/location/geocoding'] = array(
     'title' => 'Geocoding options',
     'description' => 'Configure how Location geocodes addresses.',
     'page callback' => 'drupal_get_form',
@@ -108,13 +108,13 @@ function location_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
   );
-  $items['admin/config/location/geocoding/%/%'] = array(
+  $items['admin/config/content/location/geocoding/%/%'] = array(
     'page callback' => 'location_geocoding_parameters_page',
     'page arguments' => array(4, 5),
     'access arguments' => array('administer site configuration'),
     'type' => MENU_CALLBACK,
   );
-  $items['admin/config/location/util'] = array(
+  $items['admin/config/content/location/util'] = array(
     'title' => 'Location utilities',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('location_util_form'),
@@ -126,7 +126,7 @@ function location_menu() {
 
   /////////////////// DRUPAL 7
   /*
-  $items['admin/config/location/bundles'] = array(
+  $items['admin/config/content/location/bundles'] = array(
     'title' => 'Locations',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('location_util_form'),
