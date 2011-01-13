@@ -6,12 +6,27 @@
  * Associate locations with users.
  */
 
-function location_user_perm() {
+/**
+ * Implement hook_permission().
+ */
+function location_user_permission() {
   return array(
-    'administer user locations',
-    'set own user location',
-    'view own user location',
-    'view all user locations',
+    'administer user locations' => array(
+      'title' => t('Administer user locations'),
+      'description' => t('Allow the user to edit the locations of any user.'),
+    ),
+    'set own user location' => array(
+      'title' => t('Set own user location'),
+      'description' => t('Allow the user to edit their own location.'),
+    ),
+    'view own user location' => array(
+      'title' => t('View own user location'),
+      'description' => t('Allow the user to see their own location.'),
+    ),
+    'view all user locations' => array(
+      'title' => t('View all user locations'),
+      'description' => t('Allow the user to see all user locations.'),
+    ),
   );
 }
 
@@ -38,56 +53,74 @@ function location_user_form_user_admin_settings_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_user().
+ * Implement hook_user_load().
  */
-function location_user_user($op, &$edit, &$account, $category = NULL) {
-  global $user;
+function location_user_user_load($users) {
+  foreach ($users as $k => $v) {
+    $users[$k]->locations = location_load_locations($users[$k]->uid, 'uid');
+    $users[$k]->location = count($users[$k]->locations) ? $users[$k]->locations[0] : array();
+  }
+}
 
-  switch ($op) {
-    case 'load':
-      $account->locations = location_load_locations($account->uid, 'uid');
-      $account->location = count($account->locations) ? $account->locations[0] : array();
-      break;
+/**
+ * Implement hook_user_insert().
+ */
+function location_user_user_insert(&$edit, $account, $category) {
+  location_user_update($edit, $account, $category);
+}
 
-    case 'insert':
-    case 'update':
-      if (!empty($edit['locations'])) {
-        location_save_locations($edit['locations'], array('uid' => $account->uid));
-      }
-      unset($edit['locations']);
-      break;
+/**
+ * Implement hook_user_update().
+ */
+function location_user_user_update(&$edit, $account, $category) {
+  if (!empty($edit['locations'])) {
+    location_save_locations($edit['locations'], array('uid' => $account->uid));
+  }
+  unset($edit['locations']);
+}
 
-    case 'delete':
-      $locations = array();
-      location_save_locations($locations, array('uid' => $account->uid));
-      break;
+/**
+ * Implement hook_user_delete().
+ */
+function location_user_user_delete($account) {
+  $locations = array();
+  location_save_locations($locations, array('uid' => $account->uid));
+}
 
-    case 'form':
-      if ($category == 'account') {
-        if ((($user->uid == $account->uid) && user_access('set own user location')) || user_access('administer user locations')) {
-          $settings = variable_get('location_settings_user', array());
-          $form['locations'] = location_form($settings, $account->locations);
-          return $form;
-        }
-      }
-      break;
+/**
+ * Form alter for user registration form.
+ */
+function location_user_form_user_register_form_alter(&$form, &$form_state) {
+  $settings = variable_get('location_settings_user', array());
+  if (isset($settings['form']['register']) && $settings['form']['register']) {
+    $form['locations'] = location_form($settings, array());
+  }
+}
 
-    case 'register':
+/**
+ * Form alter for user profile form.
+ */
+function location_user_form_user_profile_form_alter(&$form, &$form_state) {
+  if ($form['#user_category'] == 'account') {
+    global $user;
+    $account = $form['#user'];
+    if ((($user->uid == $account->uid) && user_access('set own user location')) || user_access('administer user locations')) {
       $settings = variable_get('location_settings_user', array());
-      if (isset($settings['form']['register']) && $settings['form']['register']) {
-        $form['locations'] = location_form($settings, array());
-        return $form;
-      }
-      break;
+      $form['locations'] = location_form($settings, $account->locations);
+    }
+  }
+}
 
-    case 'view':
-      if ((($user->uid == $account->uid) && user_access('view own user location')) || user_access('administer users') || user_access('view all user locations') || user_access('administer user locations')) {
-        if (variable_get('location_display_location', 1) && isset($account->locations) && count($account->locations)) {
-          $settings = variable_get('location_settings_user', array());
-          $account->content['locations'] = location_display($settings, $account->locations);
-        }
-      }
-      break;
+/**
+ * Implement hook_user_view().
+ */
+function location_user_user_view($account) {
+  global $user;
+  if ((($user->uid == $account->uid) && user_access('view own user location')) || user_access('administer users') || user_access('view all user locations') || user_access('administer user locations')) {
+    if (variable_get('location_display_location', 1) && isset($account->locations) && count($account->locations)) {
+      $settings = variable_get('location_settings_user', array());
+      $account->content['locations'] = location_display($settings, $account->locations);
+    }
   }
 }
 
@@ -99,8 +132,8 @@ function location_user_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NUL
     case 'instance_links':
       foreach ($obj as $k => $v) {
         if ($v['uid'] != 0) {
-          $account = user_load(array('uid' => $v['uid']));
-          $obj[$k]['href'] = 'user/'. $v['uid'];
+          $account = user_load($v['uid']);
+          $obj[$k]['href'] = 'user/' . $v['uid'];
           $obj[$k]['title'] = $account->name;
           $obj[$k]['type'] = t('User location');
         }

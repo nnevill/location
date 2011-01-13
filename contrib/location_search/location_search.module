@@ -188,7 +188,7 @@ function location_search_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Advanced search'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#attributes' => array('class' => 'search-advanced'),
+      '#attributes' => array('class' => array('search-advanced')),
     );
 
     $form['advanced']['country'] = array(
@@ -196,7 +196,7 @@ function location_search_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Country'),
       '#options' => $countries,
       // Used by province autocompletion js.
-      '#attributes' => array('class' => 'location_auto_country'),
+      '#attributes' => array('class' => array('location_auto_country')),
     );
 
     $form['advanced']['province'] = array(
@@ -204,7 +204,7 @@ function location_search_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('State/Province'),
       '#autocomplete_path' => 'location/autocomplete/'. variable_get('site_default_country', 'us'),
       // Used by province autocompletion js.
-      '#attributes' => array('class' => 'location_auto_province'),
+      '#attributes' => array('class' => array('location_auto_province')),
     );
 
     $form['advanced']['city'] = array(

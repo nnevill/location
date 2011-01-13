@@ -359,17 +359,17 @@ function _location_expand_location($element) {
       $element['locpick']['current'] = array(
         '#type' => 'fieldset',
         '#title' => t('Current coordinates'),
-        '#attributes' => array('class' => 'location-current-coordinates-fieldset'),
+        '#attributes' => array('class' => array('location-current-coordinates-fieldset')),
       );
       $element['locpick']['current']['current_latitude'] = array(
         '#type' => 'item',
         '#title' => t('Latitude'),
-        '#value' => $defaults['latitude'],
+        '#markup' => $defaults['latitude'],
       );
       $element['locpick']['current']['current_longitude'] = array(
         '#type' => 'item',
         '#title' => t('Longitude'),
-        '#value' => $defaults['longitude'],
+        '#markup' => $defaults['longitude'],
       );
       $source = t('Unknown');
       switch ($defaults['source']) {
@@ -385,7 +385,7 @@ function _location_expand_location($element) {
       $element['locpick']['current']['current_source'] = array(
         '#type' => 'item',
         '#title' => t('Source'),
-        '#value' => $source,
+        '#markup' => $source,
       );
     }
 
@@ -416,7 +416,7 @@ function _location_expand_location($element) {
       );
     if (function_exists('gmap_get_auto_mapid') && variable_get('location_usegmap', FALSE)) {
       $mapid = gmap_get_auto_mapid();
-      $map = gmap_parse_macro(variable_get('location_locpick_macro', '[gmap]'));
+      $map = array_merge(gmap_defaults(), gmap_parse_macro(variable_get('location_locpick_macro', '[gmap]')));
       $map['id'] = $mapid;
       $map['points'] = array();
       $map['pointsOverlays'] = array();
@@ -447,8 +447,7 @@ function _location_expand_location($element) {
       $element['locpick']['map'] = array(
         '#type' => 'gmap',
         '#weight' => -1,
-        '#map' => $mapid,
-        '#settings' => $map,
+        '#gmap_settings' => $map,
       );
       $element['locpick']['map_instructions'] = array(
         '#type' => 'markup',
@@ -719,7 +718,15 @@ function location_locationapi(&$obj, $op, $a3 = NULL, $a4 = NULL, $a5 = NULL) {
 
         case 'province':
           drupal_add_js(drupal_get_path('module', 'location') . '/location_autocomplete.js');
-          $country = !empty($a5['country']['default']) ? $a5['country']['default'] : variable_get('site_default_country', 'us');
+          if (isset($a5['country']) && is_string($a5['country'])) {
+            $country = $a5['country'];
+          }
+          elseif (isset($a5['country']['default']) && is_string($a5['country']['default'])){
+            $country = $a5['country']['default'];
+          }
+          else {
+            $country = variable_get('site_default_country', 'us');
+          }
           return array(
             '#type' => 'textfield',
             '#title' => t('State/Province'),
