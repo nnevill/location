@@ -39,7 +39,10 @@ function location_fax_schema() {
  */
 function location_fax_install() {
   // Change weight so we execute after location.
-  db_query("UPDATE {system} SET weight = 1 WHERE name = '%s' AND type = '%s'", 'location_fax', 'module');
+  db_update('system')
+    ->fields(array('weight' => 1,))
+    ->condition('name', 'location_fax')
+    ->execute();
 }
 
 /**
@@ -79,10 +82,10 @@ function location_fax_update_5301() {
  * Change weight of module.
  */
 function location_fax_update_5302() {
-  $ret = array();
-  // Change weight.
-  $ret[] = update_sql("UPDATE {system} SET weight = 1 WHERE name = 'location_fax' AND type = 'module'");
-  return $ret;
+  db_update('system')
+    ->fields(array('weight' => 1,))
+    ->condition('name', 'location_fax')
+    ->execute();
 }
 
 /**

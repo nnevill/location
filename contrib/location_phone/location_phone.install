@@ -39,7 +39,10 @@ function location_phone_schema() {
  */
 function location_phone_install() {
   // Change weight.
-  db_query("UPDATE {system} SET weight = 1 WHERE name = '%s' AND type = '%s'", 'location_phone', 'module');
+  db_update('system')
+    ->fields(array('weight' => 1,))
+    ->condition('name', 'location_phone')
+    ->execute();
 }
 
 /**
@@ -85,10 +88,10 @@ function location_phone_update_5301() {
  * Change weight of module.
  */
 function location_phone_update_5302() {
-  $ret = array();
-  // Change weight.
-  $ret[] = update_sql("UPDATE {system} SET weight = 1 WHERE name = 'location_phone' AND type = 'module'");
-  return $ret;
+  db_update('system')
+    ->fields(array('weight' => 1,))
+    ->condition('name', 'location_phone')
+    ->execute();
 }
 
 /**
