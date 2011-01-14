@@ -38,17 +38,8 @@ function location_phone_schema() {
  * Implementation of hook_install().
  */
 function location_phone_install() {
-  drupal_install_schema('location_phone');
-
   // Change weight.
   db_query("UPDATE {system} SET weight = 1 WHERE name = '%s' AND type = '%s'", 'location_phone', 'module');
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function location_phone_uninstall() {
-  drupal_uninstall_schema('location_phone');
 }
 
 /**

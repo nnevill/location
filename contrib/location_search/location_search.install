@@ -31,8 +31,6 @@ function location_search_schema() {
  * Implementation of hook_install().
  */
 function location_search_install() {
-  drupal_install_schema('location_search');
-
   // Force reindexing.
   db_query('INSERT INTO {location_search_work} (SELECT lid FROM {location})');
 }
@@ -41,7 +39,6 @@ function location_search_install() {
  * Implementation of hook_uninstall().
  */
 function location_search_uninstall() {
-  drupal_uninstall_schema('location_search');
   variable_del('location_search_map');
   variable_del('location_search_map_address');
   variable_del('location_search_map_macro');

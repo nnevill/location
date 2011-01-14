@@ -7,17 +7,9 @@
  */
 
 /**
- * Implementation of hook_install().
- */
-function location_install() {
-  drupal_install_schema('location');
-}
-
-/**
  * Implentation of hook_uninstall().
  */
 function location_uninstall() {
-  drupal_uninstall_schema('location');
 
   // Delete variables.
   variable_del('location_default_country');

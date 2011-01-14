@@ -38,17 +38,8 @@ function location_fax_schema() {
  * Implementation of hook_install().
  */
 function location_fax_install() {
-  drupal_install_schema('location_fax');
-
   // Change weight so we execute after location.
   db_query("UPDATE {system} SET weight = 1 WHERE name = '%s' AND type = '%s'", 'location_fax', 'module');
-}
-
-/**
- * Implementation of hook_uninstall().
- */
-function location_fax_uninstall() {
-  drupal_uninstall_schema('location_fax');
 }
 
 /**
