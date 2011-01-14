@@ -898,6 +898,7 @@ function location_save_locations(&$locations, $criteria) {
     foreach ($criteria as $key => $value) {
       $query->condition($key, $value);
     }
+    $query->execute();
 
     $newlids = array();
     $query = db_insert('location_instance')->fields(array('nid', 'vid', 'uid', 'genid', 'lid'));
