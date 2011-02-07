@@ -402,7 +402,7 @@ function location_views_proximity_get_location_field_options() {
   // Get the CCK location field options.
   $field_options = array('node' => t('Node location'));
   if (module_exists('location_cck')) {
-    $fields = content_fields();
+    $fields = field_info_fields();
     foreach ($fields as $field) {
       if ($field['module'] == 'location_cck') {
         $field_options[$field['field_name']] = t('CCK Location: @label (@name)', array('@label' => $field['widget']['label'], '@name' => $field['field_name']));
