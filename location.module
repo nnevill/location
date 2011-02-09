@@ -1150,6 +1150,10 @@ function location_save(&$location, $cow = TRUE, $criteria = array()) {
   if (!empty($location['lid'])) {
     watchdog('location', 'Conserving lid %lid due to uniqueness.', array('%lid' => $location['lid']));
     drupal_write_record('location', $location, array('lid'));
+    if (!db_affected_rows()) {
+      watchdog('location', 'Update location failed. Trying insert.');
+      drupal_write_record('location', $location);
+    }
   }
   else {
     unset($location['lid']);
