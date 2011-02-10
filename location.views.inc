@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Views 2 support for Location.
+ * Views 3 support for Location.
  */
 
 /*
@@ -265,7 +265,7 @@ function location_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_float',
+      'handler' => 'views_handler_filter_numeric',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
@@ -279,7 +279,7 @@ function location_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_float',
+      'handler' => 'views_handler_filter_numeric',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
