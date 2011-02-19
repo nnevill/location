@@ -30,8 +30,8 @@ class location_views_handler_filter_proximity extends views_handler_filter {
       ),
     );
 
-    $options['expose']['gmap_macro'] = array('default' => '[gmap ]');
-    $options['expose']['user_location_choose'] = array('default' => FALSE);
+    $options['expose']['contains']['gmap_macro'] = array('default' => '[gmap ]');
+    $options['expose']['contains']['user_location_choose'] = array('default' => FALSE);
 
     return $options;
   }
@@ -46,6 +46,12 @@ class location_views_handler_filter_proximity extends views_handler_filter {
       'dist' => t('Proximity (Circular)'),
     );
   }
+  
+  function expose_options() {
+    parent::expose_options();
+    $this->options['expose']['gmap_macro'] = array('default' => '[gmap ]');
+    $this->options['expose']['user_location_choose'] = array('default' => FALSE);
+  }
 
   function expose_form_left(&$form, &$form_state) {
     parent::expose_form_left($form, $form_state);
@@ -55,7 +61,7 @@ class location_views_handler_filter_proximity extends views_handler_filter {
       '#type' => 'textfield',
       '#title' => t('GMap macro'),
       '#description' => t('The macro to use for the Latitude / Longitude map, if applicable.'),
-      '#default_value' => $this->options['gmap_macro'],
+      '#default_value' => $this->options['expose']['gmap_macro'],
     );
 
     $form['expose']['user_location_choose'] = array(
@@ -229,7 +235,7 @@ class location_views_handler_filter_proximity extends views_handler_filter {
       }
       else {
         $form[$key]['proximity_map'] = array(
-          '#value' => gmap_set_location($this->options['gmap_macro'], $form[$key], array('latitude' => 'latitude', 'longitude' => 'longitude')),
+          '#value' => gmap_set_location($this->options['expose']['gmap_macro'], $form[$key], array('latitude' => 'latitude', 'longitude' => 'longitude')),
           '#weight' => 0,
         );
       }
