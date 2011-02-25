@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Trigonometry for calculating geographical distances.
 // All function arguments and return values measure distances in metres
