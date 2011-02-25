@@ -1,4 +1,3 @@
--- $Id$
 
 CREATE TABLE location (
   oid int(10) unsigned NOT NULL default '0',

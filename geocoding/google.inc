@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // Returns lower-case of iso codes for countries supported by Google's geocoder
 function google_geocode_country_list() {

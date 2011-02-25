@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 define('LOCATION_PATH', drupal_get_path('module', 'location'));
 
