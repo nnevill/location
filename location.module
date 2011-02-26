@@ -22,7 +22,7 @@ define('LOCATION_USER_COLLECT',           1);
 include_once LOCATION_PATH . '/location.inc';
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function location_menu() {
   $items = array();
@@ -154,7 +154,7 @@ function location_api_variant() {
 }
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function location_permission() {
   return array(
@@ -199,7 +199,7 @@ function location_help($path, $arg) {
 }
 
 /**
- * Implement hook_element_info().
+ * Implements hook_element_info().
  */
 function location_element_info() {
   return array(
@@ -226,7 +226,7 @@ function location_element_info() {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function location_theme() {
   return array(
