@@ -84,6 +84,31 @@ class CowInstanceTest extends LocationTestCase {
     $this->assertEqual($node2->locations[0]['latitude'], 44.25, t('Testing coordinate-only save/load'));
   }
 
+  function testLocpickOnly() {
+    $settings = array();
+    $location_type = $this->addLocationContentType($settings);
+
+    $location1_name = $this->randomName();
+
+    $node = $this->drupalCreateNode(array(
+      'type' => $location_type,
+      'locations' => array(
+        0 => array(
+          'locpick' => array(
+            'user_latitude' => '44.25',
+            'user_longitude' => '-10.25',
+          ),
+          'location_settings' => $settings,
+        ),
+      ),
+    ));
+
+    // Reload the node.
+    $node2 = node_load($node->nid, NULL, TRUE);
+    $this->pass(var_export($node2->locations, TRUE));
+    $this->assertEqual($node2->locations[0]['latitude'], 44.25, t('Testing coordinate-only save/load'));
+  }
+
   function testMultipleLocationOnSingleNode() {
     $settings = array();
     $location_type = $this->addLocationContentType($settings, array('multiple' => array('max' => 3, 'add' => 3)));
