@@ -468,6 +468,8 @@ function _location_expand_location($element) {
   }
 
   $element += element_info('fieldset');
+  
+  drupal_alter('location_element', $element);
   return $element;
 }
 
