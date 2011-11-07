@@ -1266,7 +1266,7 @@ function location_calc_difference($oldloc, $newloc, &$changes) {
       $location_changed = TRUE;
       continue;
     }
-    else if ($oldloc[$k] == $v) {
+    else if ($oldloc[$k] === $v) {
       $changes[$k] = FALSE;
       // Exact match, no change.
       continue;
