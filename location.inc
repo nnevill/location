@@ -296,8 +296,7 @@ function location_latlon_rough_default($location = array()) {
     return NULL;
   }
 
-  $result = db_query("SELECT latitude, longitude FROM {zipcodes} WHERE country = '%s' AND zip = '%s'", $location['country'], $location['postal_code']);
-  if ($row = db_fetch_object($result)) {
+  if ($row = db_query("SELECT latitude, longitude FROM {zipcodes} WHERE country = :country AND zip = :zip", array(':country' => $location['country'], ':zip' => $location['postal_code']))->fetchObject()) {
     return array('lat' => $row->latitude, 'lon' => $row->longitude);
   }
   // if nothing found internally (new zipcode, or incomplete zipcodes table)
@@ -306,8 +305,8 @@ function location_latlon_rough_default($location = array()) {
     if ($newlatlong['lat']) {
       // and store results in zipcodes table for next lookups being internally handled
       // (yeah this is missing city/state info a.t.m., but is way better than nothing!)
-      $result = db_query("INSERT INTO {zipcodes} (latitude, longitude, country, zip) values ('%s', '%s', '%s', '%s')",
-        $newlatlong['lat'], $newlatlong['lon'], $location['country'], $location['postal_code']);
+      $result = db_query("INSERT INTO {zipcodes} (latitude, longitude, country, zip) values (:latitude, :longitude, :country, :zip)",
+        array( ':latitude' => $newlatlong['lat'], ':longitude' => $newlatlong['lon'], ':country' => $location['country'], ':zip' => $location['postal_code']));
     }
     return $newlatlong;
   }
