@@ -116,7 +116,7 @@ function location_cck_field_settings($op, $field) {
       $data = content_views_field_views_data($field);
       $data[$table][$field_alias]['relationship'] = array(
         'base' => 'location',
-        'field' => 'lid',
+        'field' => $field_alias,
         'handler' => 'views_handler_relationship',
         'label' => t('Location'), // @@@ Some sort of better name?
       );
