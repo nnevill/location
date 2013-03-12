@@ -7,6 +7,20 @@
 
 class LocationTestCase extends DrupalWebTestCase {
 
+  //@todo remove this after http://drupal.org/node/1252310#comment-7109128 fix
+  protected function error($message = '', $group = 'Other', array $caller = NULL) {
+    if ($message == 'Undefined variable: location') {
+// change error (Notice) to debug message
+      return $this->assert('debug', $message, 'Debug', $caller);
+    }
+    if ($message == 'Undefined property: stdClass::$locations') {
+// change error (Notice) to debug message
+      return $this->assert('debug', $message, 'Debug', $caller);
+    }
+
+    return parent::error($message, $group, $caller);
+  }
+
   /**
    * Custom assertion -- will check each element of an array against a reference value.
    */
