@@ -79,7 +79,7 @@ class LocationGoogleGeocoderTest extends LocationTestCase {
 // @todo fixme
     //$this->assertEqual($location['source'], LOCATION_LATLON_GEOCODED_EXACT);
 
-    $expected = array(37.421972, -122.084143);
+    $expected = array(37.4218378, -122.0846263);
     $result = array($location['latitude'], $location['longitude']);
     // @todo fixme
     //$this->assertArrayEpsilon($result, $expected, 0.01, 'Google Headquarters');
