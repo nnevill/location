@@ -862,10 +862,10 @@ function location_load_locations($id, $key = 'vid') {
     return array();
   }
   if ($key == 'genid') {
-    $result = db_query('SELECT lid FROM {location_instance} WHERE '. db_escape_table($key) ." = '%s'", $id);
+    $result = db_query('SELECT lid FROM {location_instance} WHERE '. db_escape_table($key) ." = '%s' ORDER BY lid", $id);
   }
   else {
-    $result = db_query('SELECT lid FROM {location_instance} WHERE '. db_escape_table($key) .' = %d', $id);
+    $result = db_query('SELECT lid FROM {location_instance} WHERE '. db_escape_table($key) .' = %d ORDER BY lid', $id);
   }
   $locations = array();
   while ($lid = db_fetch_object($result)) {
@@ -887,8 +887,10 @@ function location_load_locations($id, $key = 'vid') {
  */
 function location_save_locations(&$locations, $criteria) {
   if (isset($locations) && is_array($locations) && !empty($criteria) && is_array($criteria)) {
+    $cow = variable_get('location_copy_on_write', 1);
+
     foreach (array_keys($locations) as $key) {
-      location_save($locations[$key], TRUE, $criteria);
+      location_save($locations[$key], $cow, $criteria);
     }
     $columns = array();
     $placeholders = array();
