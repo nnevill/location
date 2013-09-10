@@ -1626,7 +1626,9 @@ function template_preprocess_location(&$variables) {
   if (!isset($location['province_name'])) {
     $location['province_name'] = '';
   }
-  $variables['province_print'] = variable_get('location_use_province_abbreviation', 1) ? $location['province'] : $location['province_name'];
+  $variables['province_print'] = variable_get('location_use_province_abbreviation', 1) ?
+    (isset($location['province']) ? $location['province'] : '') :
+    (isset($location['province_name']) ? $location['province_name'] : '');
 }
 
 /**
