@@ -29,6 +29,13 @@ function location_admin_settings($form, &$form_state) {
       'This will be the country that is automatically selected when a location form is served for a new location.'
     )
   );
+  $form['location_us_full_zipcode_search'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable full zip code search for US zipcodes.'),
+    '#element_validate' => array('element_validate_integer'),
+    '#default_value' =>  variable_get('location_us_full_zipcode_search', FALSE),
+    '#description' => t("If you are interested in full zipcode search, enable this option. Otherwise longitude and latitide will be populated from first 5 zipcode's signs."),
+  );
   $form['location_display_location'] = array(
     '#type' => 'radios',
     '#title' => t('Toggle location display'),

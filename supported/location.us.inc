@@ -59,27 +59,27 @@ function location_latlon_rough_us($location = array()) {
  *      'lon' => approximate longitude of the center of the postal code's area
  */
 function location_get_postalcode_data_us($location = array()) {
-  $dash_index = strpos($location['postal_code'], '-');
-  // First we strip slash off if we're dealing with a 9-digit US zipcode.
-  if (!($dash_index === FALSE)) {
-    $location['postal_code'] = substr($location['postal_code'], 0, $dash_index);
+  if (!variable_get('location_us_full_zipcode_search', FALSE)) {
+    $dash_index = strpos($location['postal_code'], '-');
+    // First we strip slash off if we're dealing with a 9-digit US zipcode
+    if (!($dash_index === FALSE)) {
+      $location['postal_code'] = substr($location['postal_code'], 0, $dash_index);
+    }
+    $location['postal_code'] = str_pad($location['postal_code'], 5, "0", STR_PAD_LEFT);
   }
 
   // Now we pad the thing and query.
-  $row = db_query(
-    "SELECT * FROM {zipcodes} where country = :country AND zip = :zip",
-    array(
-      ':country' => $location['country'],
-      ':zip' => str_pad($location['postal_code'], 5, "0", STR_PAD_LEFT),
-    )
-  )->fetchObject();
+  $row = db_query("SELECT * FROM {zipcodes} where country = :country AND zip = :zip", array(
+    ':country' => $location['country'],
+    ':zip' => $location['postal_code']
+  ))->fetchObject();
   if ($row) {
     return array(
       'lat' => $row->latitude,
       'lon' => $row->longitude,
       'city' => $row->city,
       'province' => $row->state,
-      'country' => $row->country,
+      'country' => $row->country
     );
   }
   else {
